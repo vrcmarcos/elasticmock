@@ -92,3 +92,34 @@ class TestFakeElasticsearch(TestCase):
         target_doc_source = self.es.get_source(index=self.index_name, doc_type=self.doc_type, id=document_id)
 
         self.assertEqual(target_doc_source, self.body)
+
+    def test_should_raise_notfounderror_when_search_for_unexistent_index(self):
+        self.index_name = 'test_index'
+
+        with self.assertRaises(NotFoundError):
+            self.es.search(index=self.index_name)
+
+    def test_should_return_all_documents(self):
+        index_quantity = 10
+        for i in range(0, index_quantity):
+            self.es.index(index='index_{0}'.format(i), doc_type=self.doc_type, body={'data': 'test_{0}'.format(i)})
+
+        search = self.es.search()
+        self.assertEqual(index_quantity, search.get('hits').get('total'))
+
+    def test_should_return_only_indexed_documents_on_index(self):
+        index_quantity = 2
+        for i in range(0, index_quantity):
+            self.es.index(index=self.index_name, doc_type=self.doc_type, body={'data': 'test_{0}'.format(i)})
+
+        search = self.es.search(index=self.index_name)
+        self.assertEqual(index_quantity, search.get('hits').get('total'))
+
+    def test_should_return_only_indexed_documents_on_index_with_doc_type(self):
+        index_quantity = 2
+        for i in range(0, index_quantity):
+            self.es.index(index=self.index_name, doc_type=self.doc_type, body={'data': 'test_{0}'.format(i)})
+        self.es.index(index=self.index_name, doc_type='another-Doctype', body={'data': 'test'})
+
+        search = self.es.search(index=self.index_name, doc_type=self.doc_type)
+        self.assertEqual(index_quantity, search.get('hits').get('total'))
