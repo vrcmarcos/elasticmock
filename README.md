@@ -23,4 +23,4 @@ class TestClass(TestCase):
 ## Changelog
 
 #### 0.0.1:
-- **elasticmock**: Mocked **exists**, **get**, **index**, **info** and **ping** method
+- **elasticmock**: Mocked **exists**, **get**, **get_source**, **index**, **info** and **ping** method

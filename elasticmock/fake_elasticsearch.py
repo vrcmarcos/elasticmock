@@ -92,3 +92,7 @@ class FakeElasticsearch(Elasticsearch):
             'name': 'Nightwatch',
             'tagline': 'You Know, for Search'
         }
+
+    def get_source(self, index, doc_type, id, params=None):
+        document = self.get(index=index, doc_type=doc_type, id=id, params=params)
+        return document.get('_source')
