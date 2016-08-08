@@ -4,15 +4,14 @@ from unittest import TestCase
 
 import elasticsearch
 from elasticsearch.exceptions import NotFoundError
-from mock import patch
 
-from elasticmock import get_elasticmock
+from elasticmock import elasticmock
 from elasticmock.fake_elasticsearch import FakeElasticsearch
 
 
 class TestFakeElasticsearch(TestCase):
 
-    @patch('elasticsearch.Elasticsearch', get_elasticmock)
+    @elasticmock
     def setUp(self):
         self.es = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])
         self.index_name = 'test_index'
@@ -123,3 +122,9 @@ class TestFakeElasticsearch(TestCase):
 
         search = self.es.search(index=self.index_name, doc_type=self.doc_type)
         self.assertEqual(index_quantity, search.get('hits').get('total'))
+
+    @elasticmock
+    def test_should_return_same_elastic_instance_when_instantiate_more_than_one_instance_with_same_host(self):
+        es1 = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])
+        es2 = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])
+        self.assertEqual(es1, es2)
