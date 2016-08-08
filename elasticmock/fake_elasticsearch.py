@@ -73,3 +73,6 @@ class FakeElasticsearch(Elasticsearch):
                     result = True
                     break
         return result
+
+    def ping(self, params=None):
+        return True

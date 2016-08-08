@@ -77,3 +77,6 @@ class TestFakeElasticsearch(TestCase):
         data = self.es.index(index=self.index_name, doc_type=self.doc_type, body=self.body)
         document_id = data.get('_id')
         self.assertTrue(self.es.exists(index=self.index_name, doc_type=self.doc_type, id=document_id))
+
+    def test_should_return_true_when_ping(self):
+        self.assertTrue(self.es.ping())
