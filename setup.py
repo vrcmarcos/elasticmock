@@ -6,7 +6,7 @@ setup(
     name='ElasticMock',
     version='0.0.1',
     url='https://github.com/elasticmock',
-    license='GNU GPLv3',
+    license='MIT',
     author='Marcos Cardoso',
     author_email='vrcmarcos@gmail.com',
     description='Python Elasticsearch Mock for test purposes',
