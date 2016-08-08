@@ -80,3 +80,7 @@ class TestFakeElasticsearch(TestCase):
 
     def test_should_return_true_when_ping(self):
         self.assertTrue(self.es.ping())
+
+    def test_should_return_status_200_for_info(self):
+        info = self.es.info()
+        self.assertEqual(info.get('status'), 200)

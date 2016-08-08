@@ -76,3 +76,19 @@ class FakeElasticsearch(Elasticsearch):
 
     def ping(self, params=None):
         return True
+
+    def info(self, params=None):
+        return {
+            'status': 200,
+            'cluster_name': 'elasticmock',
+            'version':
+                {
+                    'lucene_version': '4.10.4',
+                    'build_hash': '00f95f4ffca6de89d68b7ccaf80d148f1f70e4d4',
+                    'number': '1.7.5',
+                    'build_timestamp': '2016-02-02T09:55:30Z',
+                    'build_snapshot': False
+                },
+            'name': 'Nightwatch',
+            'tagline': 'You Know, for Search'
+        }
