@@ -4,8 +4,8 @@ from setuptools import setup, find_packages
 
 setup(
     name='ElasticMock',
-    version='1.0.0',
-    url='https://github.com/elasticmock',
+    version='1.0.1',
+    url='https://github.com/vrcmarcos/elasticmock',
     license='MIT',
     author='Marcos Cardoso',
     author_email='vrcmarcos@gmail.com',
