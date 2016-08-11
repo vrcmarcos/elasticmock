@@ -123,6 +123,26 @@ class TestFakeElasticsearch(TestCase):
         search = self.es.search(index=self.index_name, doc_type=self.doc_type)
         self.assertEqual(index_quantity, search.get('hits').get('total'))
 
+    def test_should_raise_exception_when_delete_nonindexed_document(self):
+        with self.assertRaises(NotFoundError):
+            self.es.delete(index=self.index_name, doc_type=self.doc_type, id=1)
+
+    def test_should_delete_indexed_document(self):
+        data = self.es.index(index=self.index_name, doc_type=self.doc_type, body=self.body)
+        document_id = data.get('_id')
+        search = self.es.search(index=self.index_name)
+        self.assertEqual(1, search.get('hits').get('total'))
+        delete_data = self.es.delete(index=self.index_name, doc_type=self.doc_type, id=document_id)
+        search = self.es.search(index=self.index_name)
+        self.assertEqual(0, search.get('hits').get('total'))
+        self.assertDictEqual({
+            'found': True,
+            '_index': self.index_name,
+            '_type': self.doc_type,
+            '_id': document_id,
+            '_version': 1,
+        }, delete_data)
+
     @elasticmock
     def test_should_return_same_elastic_instance_when_instantiate_more_than_one_instance_with_same_host(self):
         es1 = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])

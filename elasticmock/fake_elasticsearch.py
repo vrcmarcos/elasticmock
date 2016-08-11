@@ -2,7 +2,7 @@
 
 import json
 
-from elasticsearch import Elasticsearch, Transport
+from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
 
@@ -151,3 +151,29 @@ class FakeElasticsearch(Elasticsearch):
             result['hits']['hits'] = hits
 
         return result
+
+    @query_params('consistency', 'parent', 'refresh', 'replication', 'routing',
+                  'timeout', 'version', 'version_type')
+    def delete(self, index, doc_type, id, params=None):
+
+        found = False
+
+        if index in self.__documents_dict:
+            for document in self.__documents_dict[index]:
+                if document.get('_type') == doc_type and document.get('_id') == id:
+                    found = True
+                    self.__documents_dict[index].remove(document)
+                    break
+
+        result_dict = {
+            'found': found,
+            '_index': index,
+            '_type': doc_type,
+            '_id': id,
+            '_version': 1,
+        }
+
+        if found:
+            return result_dict
+        else:
+            raise NotFoundError(404, json.dumps(result_dict))

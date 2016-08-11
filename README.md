@@ -33,6 +33,9 @@ class TestClass(TestCase):
 
 ## Changelog
 
+#### 1.1.0:
+- **FakeElasticSearch**: Mocked **delete** method
+
 #### 1.0.0:
 - **elasticmock**: Created **@elasticmock** decorator
 - **FakeElasticSearch**: Mocked **exists**, **get**, **get_source**, **index**, **info**, **search** and **ping** method

@@ -6,3 +6,6 @@ test_install: install
 
 test: test_install
 	@py.test --cov-report term-missing --cov=elasticmock
+
+upload:
+	@python setup.py sdist upload
