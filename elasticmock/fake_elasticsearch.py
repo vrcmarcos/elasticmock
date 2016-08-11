@@ -38,18 +38,18 @@ class FakeElasticsearch(Elasticsearch):
 
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
                   'routing', 'timeout', 'timestamp', 'ttl', 'version', 'version_type')
-    def index(self, index, doc_type, body, document_id=None, params=None):
+    def index(self, index, doc_type, body, id=None, params=None):
         if index not in self.__documents_dict:
             self.__documents_dict[index] = list()
 
-        if document_id is None:
-            document_id = get_random_id()
+        if id is None:
+            id = get_random_id()
 
         version = 1
 
         self.__documents_dict[index].append({
             '_type': doc_type,
-            '_id': document_id,
+            '_id': id,
             '_source': body,
             '_index': index,
             '_version': version
@@ -57,7 +57,7 @@ class FakeElasticsearch(Elasticsearch):
 
         return {
             '_type': doc_type,
-            '_id': document_id,
+            '_id': id,
             'created': True,
             '_version': version,
             '_index': index
