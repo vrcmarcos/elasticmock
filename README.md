@@ -36,6 +36,9 @@ class TestClass(TestCase):
 #### 1.1.0:
 - **FakeElasticSearch**: Mocked **delete** method
 
+#### 1.0.1:
+- **setup.py**: Fixed GitHub link
+
 #### 1.0.0:
 - **elasticmock**: Created **@elasticmock** decorator
 - **FakeElasticSearch**: Mocked **exists**, **get**, **get_source**, **index**, **info**, **search** and **ping** method
