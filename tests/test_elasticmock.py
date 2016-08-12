@@ -30,8 +30,6 @@ class TestFakeElasticsearch(TestCase):
         self.assertEqual(self.index_name, data.get('_index'))
 
     def test_should_raise_notfounderror_when_nonindexed_id_is_used(self):
-        self.index_name = 'test_index'
-
         with self.assertRaises(NotFoundError):
             self.es.get(index=self.index_name, id='1')
 
@@ -93,8 +91,6 @@ class TestFakeElasticsearch(TestCase):
         self.assertEqual(target_doc_source, self.body)
 
     def test_should_raise_notfounderror_when_search_for_unexistent_index(self):
-        self.index_name = 'test_index'
-
         with self.assertRaises(NotFoundError):
             self.es.search(index=self.index_name)
 
@@ -148,3 +144,58 @@ class TestFakeElasticsearch(TestCase):
         es1 = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])
         es2 = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])
         self.assertEqual(es1, es2)
+
+    @elasticmock
+    def test_should_raise_notfounderror_when_nonindexed_id_is_used_for_suggest(self):
+        with self.assertRaises(NotFoundError):
+            self.es.suggest(body={}, index=self.index_name)
+
+    @elasticmock
+    def test_should_return_suggestions(self):
+        self.es.index(index=self.index_name, doc_type=self.doc_type, body=self.body)
+        suggestion_body = {
+            'suggestion-string': {
+                'text': 'test_text',
+                'term': {
+                    'field': 'string'
+                }
+            },
+            'suggestion-id': {
+                'text': 1234567,
+                'term': {
+                    'field': 'id'
+                }
+            }
+        }
+        suggestion = self.es.suggest(body=suggestion_body, index=self.index_name)
+        self.assertIsNotNone(suggestion)
+        self.assertDictEqual({
+            'suggestion-string': [
+                {
+                    'text': 'test_text',
+                    'length': 1,
+                    'options': [
+                        {
+                            'text': 'test_text_suggestion',
+                            'freq': 1,
+                            'score': 1.0
+                        }
+                    ],
+                    'offset': 0
+                }
+            ],
+            'suggestion-id': [
+                {
+                    'text': 1234567,
+                    'length': 1,
+                    'options': [
+                        {
+                            'text': 1234568,
+                            'freq': 1,
+                            'score': 1.0
+                        }
+                    ],
+                    'offset': 0
+                }
+            ],
+        }, suggestion)

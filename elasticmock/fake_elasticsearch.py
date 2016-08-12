@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-
+from random import randint
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
@@ -177,3 +177,29 @@ class FakeElasticsearch(Elasticsearch):
             return result_dict
         else:
             raise NotFoundError(404, json.dumps(result_dict))
+
+    @query_params('allow_no_indices', 'expand_wildcards', 'ignore_unavailable',
+                  'preference', 'routing')
+    def suggest(self, body, index=None, params=None):
+        if index is not None and index not in self.__documents_dict:
+            raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(index))
+
+        result_dict = {}
+        for key, value in body.iteritems():
+            text = value.get('text')
+            suggestion = int(text) + 1 if isinstance(text, int) else '{0}_suggestion'.format(text)
+            result_dict[key] = [
+                {
+                    'text': text,
+                    'length': 1,
+                    'options': [
+                        {
+                            'text': suggestion,
+                            'freq': 1,
+                            'score': 1.0
+                        }
+                    ],
+                    'offset': 0
+                }
+            ]
+        return result_dict
