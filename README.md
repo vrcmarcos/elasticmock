@@ -17,7 +17,7 @@ To use ElasticMock, decorate your test method with **@elasticmock** decorator:
 ```python
 from unittest import TestCase
 
-from elasticmock import elasticmock, elasticTearDown
+from elasticmock import elasticmock
 
 
 class TestClass(TestCase):
