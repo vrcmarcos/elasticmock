@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from random import randint
+
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
