@@ -30,8 +30,63 @@ class TestClass(TestCase):
 ## Notes:
 
 - The mocked **search** method returns **all available documents** indexed on the index with the requested document type.
+- The mocked **suggest** method returns the exactly suggestions dictionary passed as body serialized in Elasticsearch.suggest response. **Atention:** If the term is an *int*, the suggestion will be ```python term + 1```. If not, the suggestion will be formatted as ```python {0}_suggestion.format(term) ```.
+Example:
+	- **Suggestion Body**:
+	```python
+    suggestion_body = {
+        'suggestion-string': {
+            'text': 'test_text',
+            'term': {
+                'field': 'string'
+            }
+        },
+        'suggestion-id': {
+            'text': 1234567,
+            'term': {
+                'field': 'id'
+            }
+        }
+    }
+    ```
+    - **Suggestion Response**:
+    ```python
+    {
+        'suggestion-string': [
+            {
+                'text': 'test_text',
+                'length': 1,
+                'options': [
+                    {
+                        'text': 'test_text_suggestion',
+                        'freq': 1,
+                        'score': 1.0
+                    }
+                ],
+                'offset': 0
+            }
+        ],
+        'suggestion-id': [
+            {
+                'text': 1234567,
+                'length': 1,
+                'options': [
+                    {
+                        'text': 1234568,
+                        'freq': 1,
+                        'score': 1.0
+                    }
+                ],
+                'offset': 0
+            }
+        ],
+    }
+    ```
 
 ## Changelog
+
+#### 1.2.0:
+- **FakeElasticSearch**: Mocked **suggest** method
 
 #### 1.1.1:
 - **elasticmock**: Changing the cleanup older FakeElasticSearch's instances order
