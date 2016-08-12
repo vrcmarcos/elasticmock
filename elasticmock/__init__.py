@@ -19,15 +19,11 @@ def _get_elasticmock(hosts=None):
     return connection
 
 
-def _clear_instances():
-    ELASTIC_INSTANCES.clear()
-
-
 def elasticmock(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        ELASTIC_INSTANCES.clear()
         with patch('elasticsearch.Elasticsearch', _get_elasticmock):
             result = f(*args, **kwargs)
-            _clear_instances()
         return result
     return decorated

@@ -17,7 +17,7 @@ To use ElasticMock, decorate your test method with **@elasticmock** decorator:
 ```python
 from unittest import TestCase
 
-from elasticmock import elasticmock
+from elasticmock import elasticmock, elasticTearDown
 
 
 class TestClass(TestCase):
@@ -32,6 +32,10 @@ class TestClass(TestCase):
 - The mocked **search** method returns **all available documents** indexed on the index with the requested document type.
 
 ## Changelog
+
+#### 1.1.1:
+- **elasticmock**: Changing the cleanup older FakeElasticSearch's instances order
+- **FakeElasticSearch.index**: Changing the method signature to correctly overrides the Elasticsearch.index method
 
 #### 1.1.0:
 - **FakeElasticSearch**: Mocked **delete** method
