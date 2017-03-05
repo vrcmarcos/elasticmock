@@ -10,7 +10,6 @@ from elasticmock.fake_elasticsearch import FakeElasticsearch
 
 
 class TestFakeElasticsearch(TestCase):
-
     @elasticmock
     def setUp(self):
         self.es = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])
@@ -93,6 +92,14 @@ class TestFakeElasticsearch(TestCase):
     def test_should_raise_notfounderror_when_search_for_unexistent_index(self):
         with self.assertRaises(NotFoundError):
             self.es.search(index=self.index_name)
+
+    def test_should_return_count_for_indexed_documents_on_index(self):
+        index_quantity = 0
+        for i in range(0, index_quantity):
+            self.es.index(index='index_{0}'.format(i), doc_type=self.doc_type, body={'data': 'test_{0}'.format(i)})
+
+        count = self.es.count()
+        self.assertEqual(index_quantity, count.get('count'))
 
     def test_should_return_all_documents(self):
         index_quantity = 10
