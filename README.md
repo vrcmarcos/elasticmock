@@ -85,6 +85,9 @@ Example:
 
 ## Changelog
 
+#### 1.3.0:
+- **FakeElasticSearch**: Mocked **count** method (Thanks [@TheoResources](https://github.com/TheoResources)!)
+
 #### 1.2.0:
 - **FakeElasticSearch**: Mocked **suggest** method
 
