@@ -117,6 +117,37 @@ class FakeElasticsearch(Elasticsearch):
                   'size', 'sort', 'stats', 'suggest_field', 'suggest_mode',
                   'suggest_size', 'suggest_text', 'terminate_after', 'timeout',
                   'track_scores', 'version')
+    def count(self, index=None, doc_type=None, body=None, params=None):
+        if index is not None and index not in self.__documents_dict:
+            raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(index))
+
+        searchable_indexes = [index] if index is not None else self.__documents_dict.keys()
+
+        i = 0
+        for searchable_index in searchable_indexes:
+            for document in self.__documents_dict[searchable_index]:
+                if doc_type is not None and document.get('_type') != doc_type:
+                    continue
+                i += 1
+        result = {
+            'count': i,
+            '_shards': {
+                'successful': 1,
+                'failed': 0,
+                'total': 1
+            }
+        }
+
+        return result
+
+    @query_params('_source', '_source_exclude', '_source_include',
+                  'allow_no_indices', 'analyze_wildcard', 'analyzer', 'default_operator',
+                  'df', 'expand_wildcards', 'explain', 'fielddata_fields', 'fields',
+                  'from_', 'ignore_unavailable', 'lenient', 'lowercase_expanded_terms',
+                  'preference', 'q', 'request_cache', 'routing', 'scroll', 'search_type',
+                  'size', 'sort', 'stats', 'suggest_field', 'suggest_mode',
+                  'suggest_size', 'suggest_text', 'terminate_after', 'timeout',
+                  'track_scores', 'version')
     def search(self, index=None, doc_type=None, body=None, params=None):
         if index is not None and index not in self.__documents_dict:
             raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(index))
