@@ -2,6 +2,7 @@
 
 from functools import wraps
 
+from elasticsearch.client import _normalize_hosts
 from mock import patch
 
 from elasticmock.fake_elasticsearch import FakeElasticsearch
@@ -10,7 +11,11 @@ ELASTIC_INSTANCES = {}
 
 
 def _get_elasticmock(hosts=None, *args, **kwargs):
-    elastic_key = 'localhost:9200' if hosts is None else '{0}:{1}'.format(hosts[0].get('host'), hosts[0].get('port'))
+    host = _normalize_hosts(hosts)[0]
+    elastic_key = '{0}:{1}'.format(
+        host.get('host', 'localhost'), host.get('port', 9200)
+    )
+
     if elastic_key in ELASTIC_INSTANCES:
         connection = ELASTIC_INSTANCES.get(elastic_key)
     else:
