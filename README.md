@@ -85,8 +85,12 @@ Example:
 
 ## Changelog
 
+#### 1.3.1
+
+- **elasticmock**: Allow the same arguments to the mock that elasticsearch.Elasticsearch allows (Thanks [@mattbreeden](https://github.com/mattbreeden))
+
 #### 1.3.0:
-- **FakeElasticSearch**: Mocked **count** method (Thanks [@TheoResources](https://github.com/TheoResources)!)
+- **FakeElasticSearch**: Mocked **count** method (Thanks [@TheoResources](https://github.com/TheoResources))
 
 #### 1.2.0:
 - **FakeElasticSearch**: Mocked **suggest** method
