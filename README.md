@@ -83,7 +83,18 @@ Example:
     }
     ```
 
+## Testing
+
+```bash
+python setup.py test
+```
+
 ## Changelog
+
+#### 1.3.2
+
+- Python3 fixes.
+- Add information on testing.
 
 #### 1.3.1
 
