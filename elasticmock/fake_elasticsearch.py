@@ -216,7 +216,7 @@ class FakeElasticsearch(Elasticsearch):
             raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(index))
 
         result_dict = {}
-        for key, value in body.iteritems():
+        for key, value in body.items():
             text = value.get('text')
             suggestion = int(text) + 1 if isinstance(text, int) else '{0}_suggestion'.format(text)
             result_dict[key] = [
