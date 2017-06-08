@@ -5,14 +5,20 @@ import json
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
+from elasticsearch.client import _normalize_hosts
+from elasticsearch.serializer import JSONSerializer
+from elasticmock.fake_transport import FakeTransport
 
 from elasticmock.utilities import get_random_id
+
+ELASTIC_INSTANCES = {}
 
 
 class FakeElasticsearch(Elasticsearch):
     __documents_dict = None
 
-    def __init__(self):
+    def __init__(self, hosts=None, transport_class=FakeTransport, **kwargs):
+        self.transport = FakeTransport(self, _normalize_hosts(hosts))
         self.__documents_dict = {}
 
     @query_params()
@@ -234,3 +240,10 @@ class FakeElasticsearch(Elasticsearch):
                 }
             ]
         return result_dict
+
+    @query_params('consistency', 'fields', 'refresh', 'replication', 'routing', 'timeout')
+    def bulk(self, body, index=None, doc_type=None, params=None):
+        print(body)
+        return "ok"
+
+
