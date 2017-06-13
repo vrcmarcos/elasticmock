@@ -2,9 +2,11 @@
 
 from setuptools import setup, find_packages
 
+__version__ = '1.3.2'
+
 setup(
     name='ElasticMock',
-    version='1.3.1',
+    version=__version__,
     url='https://github.com/vrcmarcos/elasticmock',
     license='MIT',
     author='Marcos Cardoso',

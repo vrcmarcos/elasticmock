@@ -93,8 +93,9 @@ python setup.py test
 
 #### 1.3.2
 
-- Python3 fixes.
-- Add information on testing.
+- **elasticmock**: Python 3 fixes (Thanks [@barseghyanartur](https://github.com/barseghyanartur))
+- **test**: Add information on testing (Thanks [@barseghyanartur](https://github.com/barseghyanartur))
+- **README.md**: Fixed typo (Thanks [@bowlofstew](https://github.com/bowlofstew))
 
 #### 1.3.1
 
