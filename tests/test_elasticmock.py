@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from unittest import TestCase
+import unittest
 
 import elasticsearch
 from elasticsearch.exceptions import NotFoundError
@@ -9,7 +9,7 @@ from elasticmock import elasticmock
 from elasticmock.fake_elasticsearch import FakeElasticsearch
 
 
-class TestFakeElasticsearch(TestCase):
+class TestFakeElasticsearch(unittest.TestCase):
     @elasticmock
     def setUp(self):
         self.es = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])
@@ -206,3 +206,7 @@ class TestFakeElasticsearch(TestCase):
                 }
             ],
         }, suggestion)
+
+
+if __name__ == '__main__':
+    unittest.main()
