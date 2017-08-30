@@ -118,10 +118,7 @@ class FakeElasticsearch(Elasticsearch):
                   'suggest_size', 'suggest_text', 'terminate_after', 'timeout',
                   'track_scores', 'version')
     def count(self, index=None, doc_type=None, body=None, params=None):
-        if index is not None and index not in self.__documents_dict:
-            raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(index))
-
-        searchable_indexes = [index] if index is not None else self.__documents_dict.keys()
+        searchable_indexes = self._normalize_index_to_list(index)
 
         i = 0
         for searchable_index in searchable_indexes:
@@ -149,10 +146,7 @@ class FakeElasticsearch(Elasticsearch):
                   'suggest_size', 'suggest_text', 'terminate_after', 'timeout',
                   'track_scores', 'version')
     def search(self, index=None, doc_type=None, body=None, params=None):
-        if index is not None and index not in self.__documents_dict:
-            raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(index))
-
-        searchable_indexes = [index] if index is not None else self.__documents_dict.keys()
+        searchable_indexes = self._normalize_index_to_list(index)
 
         matches = []
         for searchable_index in searchable_indexes:
@@ -235,3 +229,22 @@ class FakeElasticsearch(Elasticsearch):
                 }
             ]
         return result_dict
+
+    def _normalize_index_to_list(self, index):
+        # Ensure to have a list of index
+        if index is None:
+            searchable_indexes = self.__documents_dict.keys()
+        elif isinstance(index, str) or isinstance(index, unicode):
+            searchable_indexes = [index]
+        elif isinstance(index, list):
+            searchable_indexes = index
+        else:
+            # Is it the correct exception to use ?
+            raise ValueError("Invalid param 'index'")
+
+        # Check index(es) exists
+        for searchable_index in searchable_indexes:
+            if searchable_index not in self.__documents_dict:
+                raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(searchable_index))
+
+        return searchable_indexes

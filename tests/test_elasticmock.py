@@ -212,6 +212,22 @@ class TestFakeElasticsearch(unittest.TestCase):
             ],
         }, suggestion)
 
+    def test_should_search_in_multiple_indexes(self):
+        self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
+        self.es.index(index='users', doc_type='users', body={'name': 'toto'})
+        self.es.index(index='pcs', doc_type='pcs', body={'model': 'macbook'})
+
+        result = self.es.search(index=['users', 'pcs'])
+        self.assertEqual(2, result.get('hits').get('total'))
+
+    def test_should_count_in_multiple_indexes(self):
+        self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
+        self.es.index(index='users', doc_type='users', body={'name': 'toto'})
+        self.es.index(index='pcs', doc_type='pcs', body={'model': 'macbook'})
+
+        result = self.es.count(index=['users', 'pcs'])
+        self.assertEqual(2, result.get('count'))
+
 
 if __name__ == '__main__':
     unittest.main()
