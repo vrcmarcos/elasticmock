@@ -160,15 +160,17 @@ class FakeElasticsearch(Elasticsearch):
                 if doc_type is not None and document.get('_type') != doc_type:
                     continue
                 matches.append(document)
+
         result = {
             'hits': {
                 'total': len(matches),
                 'max_score': 1.0
             },
             '_shards': {
-                'successful': 1,
+                # Simulate indexes with 1 shard each
+                'successful': len(searchable_indexes),
                 'failed': 0,
-                'total': 1
+                'total': len(searchable_indexes)
             },
             'took': 1,
             'timed_out': False
