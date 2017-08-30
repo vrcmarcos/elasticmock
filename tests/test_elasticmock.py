@@ -101,6 +101,11 @@ class TestFakeElasticsearch(unittest.TestCase):
         count = self.es.count()
         self.assertEqual(index_quantity, count.get('count'))
 
+    def test_should_return_hits_hits_even_when_no_result(self):
+        search = self.es.search()
+        self.assertEqual(0, search.get('hits').get('total'))
+        self.assertListEqual([], search.get('hits').get('hits'))
+
     def test_should_return_all_documents(self):
         index_quantity = 10
         for i in range(0, index_quantity):

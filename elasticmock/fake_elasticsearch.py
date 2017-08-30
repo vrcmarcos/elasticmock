@@ -174,12 +174,11 @@ class FakeElasticsearch(Elasticsearch):
             'timed_out': False
         }
 
-        if matches:
-            hits = []
-            for match in matches:
-                match['_score'] = 1.0
-                hits.append(match)
-            result['hits']['hits'] = hits
+        hits = []
+        for match in matches:
+            match['_score'] = 1.0
+            hits.append(match)
+        result['hits']['hits'] = hits
 
         return result
 
