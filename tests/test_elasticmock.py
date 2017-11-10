@@ -101,6 +101,11 @@ class TestFakeElasticsearch(unittest.TestCase):
         count = self.es.count()
         self.assertEqual(index_quantity, count.get('count'))
 
+    def test_should_return_hits_hits_even_when_no_result(self):
+        search = self.es.search()
+        self.assertEqual(0, search.get('hits').get('total'))
+        self.assertListEqual([], search.get('hits').get('hits'))
+
     def test_should_return_all_documents(self):
         index_quantity = 10
         for i in range(0, index_quantity):
@@ -206,6 +211,22 @@ class TestFakeElasticsearch(unittest.TestCase):
                 }
             ],
         }, suggestion)
+
+    def test_should_search_in_multiple_indexes(self):
+        self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
+        self.es.index(index='users', doc_type='users', body={'name': 'toto'})
+        self.es.index(index='pcs', doc_type='pcs', body={'model': 'macbook'})
+
+        result = self.es.search(index=['users', 'pcs'])
+        self.assertEqual(2, result.get('hits').get('total'))
+
+    def test_should_count_in_multiple_indexes(self):
+        self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
+        self.es.index(index='users', doc_type='users', body={'name': 'toto'})
+        self.es.index(index='pcs', doc_type='pcs', body={'model': 'macbook'})
+
+        result = self.es.count(index=['users', 'pcs'])
+        self.assertEqual(2, result.get('count'))
 
 
 if __name__ == '__main__':
