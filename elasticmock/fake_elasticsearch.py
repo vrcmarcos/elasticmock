@@ -12,7 +12,7 @@ from elasticmock.utilities import get_random_id
 class FakeElasticsearch(Elasticsearch):
     __documents_dict = None
 
-    def __init__(self):
+    def __init__(self, hosts=None, transport_class=None, **kwargs):
         self.__documents_dict = {}
 
     @query_params()
