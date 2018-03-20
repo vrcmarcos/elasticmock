@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import json
+import sys
 
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
 
 from elasticmock.utilities import get_random_id
+
+
+PY3 = sys.version_info[0] == 3
+if PY3:
+    unicode = str
 
 
 class FakeElasticsearch(Elasticsearch):
