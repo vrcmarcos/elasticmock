@@ -12,7 +12,7 @@ setup(
     author='Marcos Cardoso',
     author_email='vrcmarcos@gmail.com',
     description='Python Elasticsearch Mock for test purposes',
-    packages=find_packages(),
+    packages=find_packages(exclude=('tests')),
     zip_safe=False,
     include_package_data=True,
     platforms='any',
