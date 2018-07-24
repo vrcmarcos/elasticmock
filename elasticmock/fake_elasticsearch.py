@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import sys
 
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
@@ -9,10 +10,15 @@ from elasticsearch.exceptions import NotFoundError
 from elasticmock.utilities import get_random_id
 
 
+PY3 = sys.version_info[0] == 3
+if PY3:
+    unicode = str
+
+
 class FakeElasticsearch(Elasticsearch):
     __documents_dict = None
 
-    def __init__(self):
+    def __init__(self, hosts=None, transport_class=None, **kwargs):
         self.__documents_dict = {}
 
     @query_params()
