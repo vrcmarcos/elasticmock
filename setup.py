@@ -7,7 +7,7 @@ __version__ = '1.3.3'
 setup(
     name='ElasticMock',
     version=__version__,
-    url='https://github.com/vrcmarcos/elasticmock',
+    url='https://github.com/snakeye/elasticmock',
     license='MIT',
     author='Marcos Cardoso',
     author_email='vrcmarcos@gmail.com',
@@ -17,8 +17,8 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'elasticsearch<=1.9.0',
-        'mock<=1.0.1'
+        'elasticsearch',
+        'mock'
     ],
     classifiers=[
         'Environment :: Web Environment',

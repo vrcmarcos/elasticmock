@@ -9,7 +9,6 @@ from elasticsearch.exceptions import NotFoundError
 
 from elasticmock.utilities import get_random_id
 
-
 PY3 = sys.version_info[0] == 3
 if PY3:
     unicode = str
@@ -181,6 +180,20 @@ class FakeElasticsearch(Elasticsearch):
             match['_score'] = 1.0
             hits.append(match)
         result['hits']['hits'] = hits
+
+        # build aggregations
+        if 'aggs' in body:
+            aggregations = {}
+
+            for aggregation, definition in body['aggs'].items():
+                aggregations[aggregation] = {
+                    "doc_count_error_upper_bound": 0,
+                    "sum_other_doc_count": 0,
+                    "buckets": []
+                }
+
+            if aggregations:
+                result['aggregations'] = aggregations
 
         return result
 
