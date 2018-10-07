@@ -228,6 +228,20 @@ class TestFakeElasticsearch(unittest.TestCase):
         result = self.es.count(index=['users', 'pcs'])
         self.assertEqual(2, result.get('count'))
 
+    def test_doc_type_can_be_list(self):
+        doc_types = ['1_idx', '2_idx', '3_idx']
+        count_per_doc_type = 3
+
+        for doc_type in doc_types:
+            for _ in range(count_per_doc_type):
+                self.es.index(index=self.index_name, doc_type=doc_type, body={})
+
+        result = self.es.search(doc_type=[doc_types[0]])
+        self.assertEqual(count_per_doc_type, result.get('hits').get('total'))
+
+        result = self.es.search(doc_type=doc_types[:2])
+        self.assertEqual(count_per_doc_type * 2, result.get('hits').get('total'))
+
 
 if __name__ == '__main__':
     unittest.main()

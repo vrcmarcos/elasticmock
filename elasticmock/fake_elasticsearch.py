@@ -156,8 +156,11 @@ class FakeElasticsearch(Elasticsearch):
         matches = []
         for searchable_index in searchable_indexes:
             for document in self.__documents_dict[searchable_index]:
-                if doc_type is not None and document.get('_type') not in doc_type:  # value in a list of allowed doc_types
-                    continue
+                if doc_type:
+                    if isinstance(doc_type, list) and document.get('_type') not in doc_type:
+                        continue
+                    if isinstance(doc_type, str) and document.get('_type') != doc_type:
+                        continue
                 matches.append(document)
 
         result = {

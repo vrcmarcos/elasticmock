@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages
+import setuptools
 
 __version__ = '1.3.3'
 
-setup(
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
     name='ElasticMock',
     version=__version__,
-    url='https://github.com/snakeye/elasticmock',
-    license='MIT',
     author='Marcos Cardoso',
     author_email='vrcmarcos@gmail.com',
     description='Python Elasticsearch Mock for test purposes',
-    packages=find_packages(exclude=('tests')),
-    zip_safe=False,
-    include_package_data=True,
-    platforms='any',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url='https://github.com/vrcmarcos/elasticmock',
+    packages=setuptools.find_packages(exclude=('tests')),
     install_requires=[
         'elasticsearch',
         'mock'
@@ -24,7 +25,8 @@ setup(
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        "License :: OSI Approved :: MIT License",
         'Topic :: Software Development :: Libraries :: Python Modules'
     ]
 )
