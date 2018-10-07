@@ -185,7 +185,7 @@ class FakeElasticsearch(Elasticsearch):
         result['hits']['hits'] = hits
 
         # build aggregations
-        if 'aggs' in body:
+        if body is not None and 'aggs' in body:
             aggregations = {}
 
             for aggregation, definition in body['aggs'].items():
