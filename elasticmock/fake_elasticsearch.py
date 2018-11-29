@@ -7,7 +7,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
 
-from elasticmock.utilities import get_random_id
+from elasticmock.utilities import get_random_id, get_random_scroll_id
 
 
 PY3 = sys.version_info[0] == 3
@@ -20,6 +20,7 @@ class FakeElasticsearch(Elasticsearch):
 
     def __init__(self, hosts=None, transport_class=None, **kwargs):
         self.__documents_dict = {}
+        self.__scrolls = {}
 
     @query_params()
     def ping(self, params=None):
@@ -183,10 +184,33 @@ class FakeElasticsearch(Elasticsearch):
         for match in matches:
             match['_score'] = 1.0
             hits.append(match)
-        result['hits']['hits'] = hits
 
+        if 'scroll' in params:
+            result['_scroll_id'] = str(get_random_scroll_id())
+            params['size'] = int(params.get('size') if 'size' in params else 10)
+            params['from'] = int(params.get('from') + params.get('size') if 'from' in params else 0)
+            self.__scrolls[result.get('_scroll_id')] = {
+                'index' : index,
+                'doc_type' : doc_type,
+                'body' : body,
+                'params' : params
+            }
+            hits = hits[params.get('from'):params.get('from') + params.get('size')]
+        
+        result['hits']['hits'] = hits
         return result
 
+    @query_params('scroll')
+    def scroll(self, scroll_id, params=None):
+        scroll = self.__scrolls.pop(scroll_id)
+        result = self.search(
+            index = scroll.get('index'),
+            doc_type = scroll.get('doc_type'),
+            body = scroll.get('body'),
+            params = scroll.get('params')
+        )
+        return result
+    
     @query_params('consistency', 'parent', 'refresh', 'replication', 'routing',
                   'timeout', 'version', 'version_type')
     def delete(self, index, doc_type, id, params=None):

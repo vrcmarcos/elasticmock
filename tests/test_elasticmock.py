@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-
 import elasticsearch
 from elasticsearch.exceptions import NotFoundError
 
@@ -242,6 +241,34 @@ class TestFakeElasticsearch(unittest.TestCase):
         result = self.es.search(doc_type=doc_types[:2])
         self.assertEqual(count_per_doc_type * 2, result.get('hits').get('total'))
 
+    def test_search_with_scroll_param(self):
+        for _ in range(100):
+            self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
+
+        result = self.es.search(index='groups', params={'scroll' : '1m', 'size' : 30})
+        self.assertNotEqual(None, result.get('_scroll_id', None))
+        self.assertEqual(30, len(result.get('hits').get('hits')))
+        self.assertEqual(100, result.get('hits').get('total'))
+
+    def test_scrolling(self):
+        for _ in range(100):
+            self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
+        
+        result = self.es.search(index='groups', params={'scroll' : '1m', 'size' : 30})
+        self.assertNotEqual(None, result.get('_scroll_id', None))
+        self.assertEqual(30, len(result.get('hits').get('hits')))
+        self.assertEqual(100, result.get('hits').get('total'))
+
+        for _ in range(2):
+            result = self.es.scroll(scroll_id = result.get('_scroll_id'), scroll = '1m')
+            self.assertNotEqual(None, result.get('_scroll_id', None))
+            self.assertEqual(30, len(result.get('hits').get('hits')))
+            self.assertEqual(100, result.get('hits').get('total'))
+
+        result = self.es.scroll(scroll_id = result.get('_scroll_id'), scroll = '1m')
+        self.assertNotEqual(None, result.get('_scroll_id', None))
+        self.assertEqual(10, len(result.get('hits').get('hits')))
+        self.assertEqual(100, result.get('hits').get('total'))
 
 if __name__ == '__main__':
     unittest.main()
