@@ -91,6 +91,11 @@ python setup.py test
 
 ## Changelog
 
+#### 1.3.4
+
+- [Added aggregations to response if requested](https://github.com/vrcmarcos/elasticmock/pull/15) (Thanks [@snakeye](https://github.com/snakeye))
+- [Implementing new methods for scrolling](https://github.com/vrcmarcos/elasticmock/pull/17) (Thanks [@tcatrain](https://github.com/tcatrain))
+
 #### 1.3.3
 
 - [Search: doc_type can be a list](https://github.com/vrcmarcos/elasticmock/pull/16) (Thanks [@garncarz](https://github.com/garncarz))
