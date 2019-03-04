@@ -241,6 +241,14 @@ class TestFakeElasticsearch(unittest.TestCase):
         result = self.es.search(doc_type=doc_types[:2])
         self.assertEqual(count_per_doc_type * 2, result.get('hits').get('total'))
 
+    def test_usage_of_aggregations(self):
+        self.es.index(index='index', doc_type='document', body={'genre': 'rock'})
+
+        body = {"aggs": {"genres": {"terms": {"field": "genre"}}}}
+        result = self.es.search(index='index', body=body)
+
+        self.assertTrue('aggregations' in result)
+
     def test_search_with_scroll_param(self):
         for _ in range(100):
             self.es.index(index='groups', doc_type='groups', body={'budget': 1000})

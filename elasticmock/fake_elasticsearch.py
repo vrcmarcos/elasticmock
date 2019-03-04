@@ -9,7 +9,6 @@ from elasticsearch.exceptions import NotFoundError
 
 from elasticmock.utilities import get_random_id, get_random_scroll_id
 
-
 PY3 = sys.version_info[0] == 3
 if PY3:
     unicode = str
@@ -185,6 +184,20 @@ class FakeElasticsearch(Elasticsearch):
             match['_score'] = 1.0
             hits.append(match)
 
+        # build aggregations
+        if body is not None and 'aggs' in body:
+            aggregations = {}
+
+            for aggregation, definition in body['aggs'].items():
+                aggregations[aggregation] = {
+                    "doc_count_error_upper_bound": 0,
+                    "sum_other_doc_count": 0,
+                    "buckets": []
+                }
+
+            if aggregations:
+                result['aggregations'] = aggregations
+
         if 'scroll' in params:
             result['_scroll_id'] = str(get_random_scroll_id())
             params['size'] = int(params.get('size') if 'size' in params else 10)
@@ -198,6 +211,7 @@ class FakeElasticsearch(Elasticsearch):
             hits = hits[params.get('from'):params.get('from') + params.get('size')]
         
         result['hits']['hits'] = hits
+        
         return result
 
     @query_params('scroll')
