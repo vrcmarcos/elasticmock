@@ -7,5 +7,14 @@ test_install: install
 test: test_install
 	@py.test --cov-report term-missing --cov=elasticmock
 
-upload:
+upload: create_dist
+	@twine upload dist/*
+
+create_dist: install_twine
 	@python setup.py sdist upload
+
+install_twine: update_pip
+	@pip install twine
+
+update_pip:
+	@pip install --upgrade pip
