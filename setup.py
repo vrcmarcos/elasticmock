@@ -4,8 +4,11 @@ import setuptools
 
 __version__ = '1.3.4'
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+# read the contents of your readme file
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), 'r') as f:
+    long_description = f.read()
 
 setuptools.setup(
     name='ElasticMock',
