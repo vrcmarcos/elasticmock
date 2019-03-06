@@ -91,6 +91,10 @@ python setup.py test
 
 ## Changelog
 
+#### 1.3.5
+
+- [Fix 1.3.4 release](https://github.com/vrcmarcos/elasticmock/pull/19) (Thanks [@infinite-Joy](https://github.com/infinite-Joy))
+
 #### 1.3.4
 
 - [Added aggregations to response if requested](https://github.com/vrcmarcos/elasticmock/pull/15) (Thanks [@snakeye](https://github.com/snakeye))
