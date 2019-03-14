@@ -91,6 +91,10 @@ python setup.py test
 
 ## Changelog
 
+#### 1.3.6
+
+- [Fix installation issue](https://github.com/vrcmarcos/elasticmock/pull/20) (Thanks [@tdhopper](https://github.com/tdhopper))
+
 #### 1.3.5
 
 - [Fix 1.3.4 release](https://github.com/vrcmarcos/elasticmock/pull/19) (Thanks [@infinite-Joy](https://github.com/infinite-Joy))

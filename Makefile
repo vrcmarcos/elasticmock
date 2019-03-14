@@ -11,7 +11,7 @@ upload: create_dist
 	@twine upload dist/*
 
 create_dist: install_twine
-	@python setup.py sdist upload
+	@python setup.py sdist
 
 install_twine: update_pip
 	@pip install twine
