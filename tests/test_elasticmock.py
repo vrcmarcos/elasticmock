@@ -27,6 +27,14 @@ class TestFakeElasticsearch(unittest.TestCase):
         self.assertEqual(1, data.get('_version'))
         self.assertEqual(self.index_name, data.get('_index'))
 
+    def test_should_index_document_without_doc_type(self):
+        data = self.es.index(index=self.index_name, body=self.body)
+
+        self.assertEqual('_doc', data.get('_type'))
+        self.assertTrue(data.get('created'))
+        self.assertEqual(1, data.get('_version'))
+        self.assertEqual(self.index_name, data.get('_index'))
+
     def test_should_raise_notfounderror_when_nonindexed_id_is_used(self):
         with self.assertRaises(NotFoundError):
             self.es.get(index=self.index_name, id='1')
