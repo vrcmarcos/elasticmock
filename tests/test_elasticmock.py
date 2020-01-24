@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 import unittest
 import elasticsearch
 from elasticsearch.exceptions import NotFoundError
@@ -26,6 +27,32 @@ class TestFakeElasticsearch(unittest.TestCase):
         self.assertTrue(data.get('created'))
         self.assertEqual(1, data.get('_version'))
         self.assertEqual(self.index_name, data.get('_index'))
+
+    def test_should_bulk_index_documents(self):
+        action = {'index': {'_index': self.index_name, '_type': self.doc_type}}
+        action_json = json.dumps(action)
+        body_json = json.dumps(self.body)
+        num_of_documents = 10
+
+        lines = []
+        for count in range(0, num_of_documents):
+            lines.append(action_json)
+            lines.append(body_json)
+        body = '\n'.join(lines)
+
+        data = self.es.bulk(body=body)
+        items = data.get('items')
+
+        self.assertFalse(data.get('errors'))
+        self.assertEqual(num_of_documents, len(items))
+
+        for item in items:
+            index = item.get('index')
+
+            self.assertEqual(self.doc_type, index.get('_type'))
+            self.assertEqual(self.index_name, index.get('_index'))
+            self.assertEqual('created', index.get('result'))
+            self.assertEqual(201, index.get('status'))
 
     def test_should_index_document_without_doc_type(self):
         data = self.es.index(index=self.index_name, body=self.body)

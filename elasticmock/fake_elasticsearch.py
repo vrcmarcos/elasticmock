@@ -69,6 +69,47 @@ class FakeElasticsearch(Elasticsearch):
             '_index': index
         }
 
+    @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
+                  'routing', 'timeout', 'timestamp', 'ttl', 'version', 'version_type')
+    def bulk(self, body, params=None):
+        version = 1
+        items = []
+
+        for line in body.splitlines():
+            if len(line.strip()) > 0:
+                line = json.loads(line)
+
+                if 'index' in line:
+                    index = line['index']['_index']
+                    doc_type = line['index']['_type']
+
+                    if index not in self.__documents_dict:
+                        self.__documents_dict[index] = list()
+                else:
+                    document_id = get_random_id()
+
+                    self.__documents_dict[index].append({
+                        '_type': doc_type,
+                        '_id': document_id,
+                        '_source': line,
+                        '_index': index,
+                        '_version': version
+                    })
+
+                    items.append({'index': {
+                        '_type': doc_type,
+                        '_id': document_id,
+                        '_index': index,
+                        '_version': version,
+                        'result': 'created',
+                        'status': 201
+                    }})
+
+        return {
+            'errors': False,
+            'items': items
+        }
+
     @query_params('parent', 'preference', 'realtime', 'refresh', 'routing')
     def exists(self, index, doc_type, id, params=None):
         result = False
