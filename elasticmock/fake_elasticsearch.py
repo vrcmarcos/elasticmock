@@ -227,7 +227,7 @@ class FakeElasticsearch(Elasticsearch):
     
     @query_params('consistency', 'parent', 'refresh', 'replication', 'routing',
                   'timeout', 'version', 'version_type')
-    def delete(self, index, doc_type, id, params=None):
+    def delete(self, index, doc_type="_doc", id, params=None):
 
         found = False
 
