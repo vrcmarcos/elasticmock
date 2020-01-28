@@ -15,6 +15,7 @@ class TestFakeElasticsearch(unittest.TestCase):
         self.index_name = 'test_index'
         self.doc_type = 'doc-Type'
         self.body = {'string': 'content', 'id': 1}
+        self.updated_body = {'string': 'content-updated', 'id': 1}
 
     def test_should_create_fake_elasticsearch_instance(self):
         self.assertIsInstance(self.es, FakeElasticsearch)
@@ -285,6 +286,23 @@ class TestFakeElasticsearch(unittest.TestCase):
         self.assertNotEqual(None, result.get('_scroll_id', None))
         self.assertEqual(10, len(result.get('hits').get('hits')))
         self.assertEqual(100, result.get('hits').get('total'))
+
+    def test_update_existing_doc(self):
+        data = self.es.index(index=self.index_name, doc_type=self.doc_type, body=self.body)
+        document_id = data.get('_id')
+        data = self.es.index(index=self.index_name, id=document_id, doc_type=self.doc_type, body=self.updated_body)
+        target_doc = self.es.get(index=self.index_name, id=document_id)
+
+        expected = {
+            '_type': self.doc_type,
+            '_source': self.updated_body,
+            '_index': self.index_name,
+            '_version': 2,
+            'found': True,
+            '_id': document_id
+        }
+
+        self.assertDictEqual(expected, target_doc)
 
 if __name__ == '__main__':
     unittest.main()

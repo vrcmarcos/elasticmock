@@ -47,11 +47,15 @@ class FakeElasticsearch(Elasticsearch):
     def index(self, index, body, doc_type='_doc', id=None, params=None):
         if index not in self.__documents_dict:
             self.__documents_dict[index] = list()
+        
+        version = 1
 
         if id is None:
             id = get_random_id()
-
-        version = 1
+        else:
+            doc = self.get(index, id, doc_type)
+            version = doc['_version'] + 1
+            delete_response = self.delete(index, doc_type, id)
 
         self.__documents_dict[index].append({
             '_type': doc_type,
