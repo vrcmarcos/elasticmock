@@ -91,6 +91,13 @@ python setup.py test
 
 ## Changelog
 
+#### 1.3.7
+
+- [Adding fix for updating existing doc using index](https://github.com/vrcmarcos/elasticmock/pull/32) (Thanks [@adityaghosh](https://github.com/adityaghosh))
+- [Added bulk method](https://github.com/vrcmarcos/elasticmock/pull/30) (Thanks [@charl-van-niekerk](https://github.com/charl-van-niekerk))
+- [Add default value to doc_type in index method as it is by default set to '\_doc'](https://github.com/vrcmarcos/elasticmock/pull/27) (Thanks [@mohantyashish109](https://github.com/mohantyashish109))
+- [Add support for Python 3.7](https://github.com/vrcmarcos/elasticmock/pull/25) (Thanks [@asherf](https://github.com/asherf))
+
 #### 1.3.6
 
 - [Fix installation issue](https://github.com/vrcmarcos/elasticmock/pull/20) (Thanks [@tdhopper](https://github.com/tdhopper))
