@@ -17,7 +17,7 @@ setuptools.setup(
     author_email='vrcmarcos@gmail.com',
     description='Python Elasticsearch Mock for test purposes',
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type='text/markdown',
     url='https://github.com/vrcmarcos/elasticmock',
     packages=setuptools.find_packages(exclude=('tests')),
     install_requires=[
@@ -28,7 +28,7 @@ setuptools.setup(
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
-        'Programming Language :: Python'
+        'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
