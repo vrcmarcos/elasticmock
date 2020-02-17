@@ -295,7 +295,7 @@ class TestFakeElasticsearch(unittest.TestCase):
         for _ in range(100):
             self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
 
-        result = self.es.search(index='groups', params={'scroll' : '1m', 'size' : 30})
+        result = self.es.search(index='groups', params={'scroll': '1m', 'size': 30})
         self.assertNotEqual(None, result.get('_scroll_id', None))
         self.assertEqual(30, len(result.get('hits').get('hits')))
         self.assertEqual(100, result.get('hits').get('total'))
@@ -303,19 +303,19 @@ class TestFakeElasticsearch(unittest.TestCase):
     def test_scrolling(self):
         for _ in range(100):
             self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
-        
-        result = self.es.search(index='groups', params={'scroll' : '1m', 'size' : 30})
+
+        result = self.es.search(index='groups', params={'scroll': '1m', 'size': 30})
         self.assertNotEqual(None, result.get('_scroll_id', None))
         self.assertEqual(30, len(result.get('hits').get('hits')))
         self.assertEqual(100, result.get('hits').get('total'))
 
         for _ in range(2):
-            result = self.es.scroll(scroll_id = result.get('_scroll_id'), scroll = '1m')
+            result = self.es.scroll(scroll_id=result.get('_scroll_id'), scroll='1m')
             self.assertNotEqual(None, result.get('_scroll_id', None))
             self.assertEqual(30, len(result.get('hits').get('hits')))
             self.assertEqual(100, result.get('hits').get('total'))
 
-        result = self.es.scroll(scroll_id = result.get('_scroll_id'), scroll = '1m')
+        result = self.es.scroll(scroll_id=result.get('_scroll_id'), scroll='1m')
         self.assertNotEqual(None, result.get('_scroll_id', None))
         self.assertEqual(10, len(result.get('hits').get('hits')))
         self.assertEqual(100, result.get('hits').get('total'))
@@ -323,7 +323,7 @@ class TestFakeElasticsearch(unittest.TestCase):
     def test_update_existing_doc(self):
         data = self.es.index(index=self.index_name, doc_type=self.doc_type, body=self.body)
         document_id = data.get('_id')
-        data = self.es.index(index=self.index_name, id=document_id, doc_type=self.doc_type, body=self.updated_body)
+        self.es.index(index=self.index_name, id=document_id, doc_type=self.doc_type, body=self.updated_body)
         target_doc = self.es.get(index=self.index_name, id=document_id)
 
         expected = {
@@ -336,6 +336,7 @@ class TestFakeElasticsearch(unittest.TestCase):
         }
 
         self.assertDictEqual(expected, target_doc)
+
 
 if __name__ == '__main__':
     unittest.main()

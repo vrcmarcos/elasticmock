@@ -248,10 +248,10 @@ class FakeElasticsearch(Elasticsearch):
             params['size'] = int(params.get('size') if 'size' in params else 10)
             params['from'] = int(params.get('from') + params.get('size') if 'from' in params else 0)
             self.__scrolls[result.get('_scroll_id')] = {
-                'index' : index,
-                'doc_type' : doc_type,
-                'body' : body,
-                'params' : params
+                'index': index,
+                'doc_type': doc_type,
+                'body': body,
+                'params': params
             }
             hits = hits[params.get('from'):params.get('from') + params.get('size')]
         
@@ -263,10 +263,10 @@ class FakeElasticsearch(Elasticsearch):
     def scroll(self, scroll_id, params=None):
         scroll = self.__scrolls.pop(scroll_id)
         result = self.search(
-            index = scroll.get('index'),
-            doc_type = scroll.get('doc_type'),
-            body = scroll.get('body'),
-            params = scroll.get('params')
+            index=scroll.get('index'),
+            doc_type=scroll.get('doc_type'),
+            body=scroll.get('body'),
+            params=scroll.get('params')
         )
         return result
     
