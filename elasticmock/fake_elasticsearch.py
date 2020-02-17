@@ -10,6 +10,7 @@ from elasticsearch.exceptions import NotFoundError
 from elasticmock.behaviour.server_failure import server_failure
 from elasticmock.utilities import get_random_id, get_random_scroll_id
 from elasticmock.utilities.decorator import for_all_methods
+from elasticmock.fake_indices import FakeIndicesClient
 
 PY3 = sys.version_info[0] == 3
 if PY3:
@@ -23,6 +24,10 @@ class FakeElasticsearch(Elasticsearch):
     def __init__(self, hosts=None, transport_class=None, **kwargs):
         self.__documents_dict = {}
         self.__scrolls = {}
+
+    @property
+    def indices(self):
+        return FakeIndicesClient(self)
 
     @query_params()
     def ping(self, params=None):
