@@ -160,7 +160,7 @@ python setup.py test
 
 - [Search: doc_type can be a list](https://github.com/vrcmarcos/elasticmock/pull/16) (Thanks [@garncarz](https://github.com/garncarz))
 - [Exclude tests package](https://github.com/vrcmarcos/elasticmock/pull/13) (Thanks [@jmlw](https://github.com/jmlw))
-- [Make the FakeElasticsearch __init__ signature match the one from Elasticsearc](https://github.com/vrcmarcos/elasticmock/pull/10) (Thanks [@xrmx](https://github.com/xrmx))
+- [Make the FakeElasticsearch __init__ signature match the one from Elasticsearch](https://github.com/vrcmarcos/elasticmock/pull/10) (Thanks [@xrmx](https://github.com/xrmx))
 - [Improve search and count](https://github.com/vrcmarcos/elasticmock/pull/7) (Thanks [@frivoire](https://github.com/frivoire))
 
 #### 1.3.2
