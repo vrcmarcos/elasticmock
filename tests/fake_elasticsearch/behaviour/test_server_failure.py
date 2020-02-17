@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from elasticmock import behaviour
-from tests.elasticsearch.behaviour import TestElasticmockBehaviour
-from tests.elasticsearch import INDEX_NAME, DOC_TYPE, BODY
+from tests.fake_elasticsearch.behaviour import TestElasticmockBehaviour
+from tests import INDEX_NAME, DOC_TYPE, BODY
 
 
 class TestBehaviourServerFailure(TestElasticmockBehaviour):

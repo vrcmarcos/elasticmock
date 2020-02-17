@@ -2,7 +2,7 @@
 
 from elasticsearch.exceptions import NotFoundError
 
-from tests.elasticsearch import TestElasticmock, INDEX_NAME, DOC_TYPE
+from tests import TestElasticmock, INDEX_NAME, DOC_TYPE
 
 
 class TestSearch(TestElasticmock):

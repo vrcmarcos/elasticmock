@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from tests.elasticsearch import TestElasticmock
+from tests import TestElasticmock
 
 
 class TestInfo(TestElasticmock):

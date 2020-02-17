@@ -2,7 +2,7 @@
 
 import json
 
-from tests.elasticsearch import TestElasticmock, INDEX_NAME, DOC_TYPE, BODY
+from tests import TestElasticmock, INDEX_NAME, DOC_TYPE, BODY
 
 
 class TestBulk(TestElasticmock):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from tests.indices import TestElasticmock, INDEX_NAME
+from tests import TestElasticmock, INDEX_NAME
 
 
 class TestExists(TestElasticmock):

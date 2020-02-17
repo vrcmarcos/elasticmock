@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from tests.elasticsearch import TestElasticmock, INDEX_NAME, DOC_TYPE, BODY
+from tests import TestElasticmock, INDEX_NAME, DOC_TYPE, BODY
 
 
 class TestExists(TestElasticmock):

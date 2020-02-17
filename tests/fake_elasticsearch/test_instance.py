@@ -4,7 +4,7 @@ import elasticsearch
 
 from elasticmock import elasticmock
 from elasticmock.fake_elasticsearch import FakeElasticsearch
-from tests.elasticsearch import TestElasticmock
+from tests import TestElasticmock
 
 
 class TestInstance(TestElasticmock):

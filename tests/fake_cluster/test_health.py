@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from tests.cluster import TestElasticmock
+from tests import TestElasticmock
 
 
 class TestHealth(TestElasticmock):
