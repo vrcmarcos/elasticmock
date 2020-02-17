@@ -91,6 +91,12 @@ python setup.py test
 
 ## Changelog
 
+#### 1.3.8
+
+- [Fix es.index regression issue](https://github.com/vrcmarcos/elasticmock/issues/34)
+- Reformat code to be compliant with PEP8
+- Add support to Python 3.8
+
 #### 1.3.7
 
 - [Adding fix for updating existing doc using index](https://github.com/vrcmarcos/elasticmock/pull/32) (Thanks [@adityaghosh](https://github.com/adityaghosh))

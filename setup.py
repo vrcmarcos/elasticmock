@@ -2,7 +2,7 @@
 
 import setuptools
 
-__version__ = '1.3.7'
+__version__ = '1.3.8'
 
 # read the contents of your readme file
 from os import path
@@ -34,6 +34,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         "License :: OSI Approved :: MIT License",
         'Topic :: Software Development :: Libraries :: Python Modules'
     ]
