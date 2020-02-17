@@ -123,6 +123,10 @@ python setup.py test
 
 ## Changelog
 
+#### dev:
+- [**FakeElasticSearch**: Mocked **indices** property](https://github.com/vrcmarcos/elasticmock/issues/22)
+  - **FakeIndicesClient**: Mocked **create**, **exists**, **refresh** and **delete** methods
+
 #### 1.4.0
 
 - [Fix es.index regression issue](https://github.com/vrcmarcos/elasticmock/issues/34)
