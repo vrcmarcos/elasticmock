@@ -123,7 +123,7 @@ python setup.py test
 
 ## Changelog
 
-#### dev:
+#### 1.5.0:
 - [**FakeElasticSearch**: Mocked **indices** property](https://github.com/vrcmarcos/elasticmock/issues/22)
   - **FakeIndicesClient**: Mocked **create**, **exists**, **refresh** and **delete** methods
 - [**FakeElasticSearch**: Mocked **cluster** property](https://github.com/vrcmarcos/elasticmock/issues/8)
