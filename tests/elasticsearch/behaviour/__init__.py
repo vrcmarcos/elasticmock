@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from elasticmock import behaviour
-from tests import TestElasticmock
+from tests.elasticsearch import TestElasticmock
 
 
 class TestElasticmockBehaviour(TestElasticmock):

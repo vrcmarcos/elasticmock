@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from tests import TestElasticmock, DOC_TYPE
+from tests.elasticsearch import TestElasticmock, DOC_TYPE
 
 
 class TestCount(TestElasticmock):
