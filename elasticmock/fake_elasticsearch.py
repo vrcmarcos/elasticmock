@@ -52,10 +52,10 @@ class FakeElasticsearch(Elasticsearch):
 
         if id is None:
             id = get_random_id()
-        else:
-            doc = self.get(index, id, doc_type)
+        elif self.exists(index, doc_type, id, params=params):
+            doc = self.get(index, id, doc_type, params=params)
             version = doc['_version'] + 1
-            delete_response = self.delete(index, doc_type, id)
+            self.delete(index, doc_type, id)
 
         self.__documents_dict[index].append({
             '_type': doc_type,
@@ -75,7 +75,7 @@ class FakeElasticsearch(Elasticsearch):
 
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
                   'routing', 'timeout', 'timestamp', 'ttl', 'version', 'version_type')
-    def bulk(self, body, params=None):
+    def bulk(self,  body, index=None, doc_type=None, params=None):
         version = 1
         items = []
 

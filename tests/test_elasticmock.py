@@ -2,6 +2,8 @@
 
 import json
 import unittest
+from datetime import datetime
+
 import elasticsearch
 from elasticsearch.exceptions import NotFoundError
 
@@ -15,7 +17,11 @@ class TestFakeElasticsearch(unittest.TestCase):
         self.es = elasticsearch.Elasticsearch(hosts=[{'host': 'localhost', 'port': 9200}])
         self.index_name = 'test_index'
         self.doc_type = 'doc-Type'
-        self.body = {'string': 'content', 'id': 1}
+        self.body = {
+            'author': 'kimchy',
+            'text': 'Elasticsearch: cool. bonsai cool.',
+            'timestamp': datetime.now(),
+        }
         self.updated_body = {'string': 'content-updated', 'id': 1}
 
     def test_should_create_fake_elasticsearch_instance(self):
@@ -32,7 +38,7 @@ class TestFakeElasticsearch(unittest.TestCase):
     def test_should_bulk_index_documents(self):
         action = {'index': {'_index': self.index_name, '_type': self.doc_type}}
         action_json = json.dumps(action)
-        body_json = json.dumps(self.body)
+        body_json = json.dumps(self.body, default=str)
         num_of_documents = 10
 
         lines = []
