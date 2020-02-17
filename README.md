@@ -27,6 +27,38 @@ class TestClass(TestCase):
         self.assertIsNotNone(some_function_that_uses_elasticsearch())
 ```
 
+### Custom Behaviours
+
+You can also force the behaviour of the ElasticSearch instance by importing the `elasticmock.behaviour` module:
+
+```python
+from unittest import TestCase
+
+from elasticmock import behaviour
+
+
+class TestClass(TestCase):
+
+    ...
+
+    def test_should_return_internal_server_error_when_simulate_server_error_is_true(self):
+        behaviour.server_failure.enable()
+        ...
+        behaviour.server_failure.disable()
+```
+
+You can also disable all behaviours by calling `behaviour.disable_all()` (Consider put this in your `def tearDown(self)` method)
+
+#### Available Behaviours
+
+* `server_failure`: Will make all calls to ElasticSearch returns the following error message:
+    ```python
+    {
+        'status_code': 500,
+        'error': 'Internal Server Error'
+    }
+    ```
+
 ## Notes:
 
 - The mocked **search** method returns **all available documents** indexed on the index with the requested document type.
@@ -91,9 +123,10 @@ python setup.py test
 
 ## Changelog
 
-#### 1.3.8
+#### 1.4.0
 
 - [Fix es.index regression issue](https://github.com/vrcmarcos/elasticmock/issues/34)
+- [Add 'Force Server Failure' feature as requested](https://github.com/vrcmarcos/elasticmock/issues/28)
 - Reformat code to be compliant with PEP8
 - Add support to Python 3.8
 
