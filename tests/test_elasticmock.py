@@ -7,7 +7,7 @@ from datetime import datetime
 import elasticsearch
 from elasticsearch.exceptions import NotFoundError
 
-from elasticmock import elasticmock
+from elasticmock import elasticmock, behaviour
 from elasticmock.fake_elasticsearch import FakeElasticsearch
 
 
@@ -23,6 +23,9 @@ class TestFakeElasticsearch(unittest.TestCase):
             'timestamp': datetime.now(),
         }
         self.updated_body = {'string': 'content-updated', 'id': 1}
+
+    def tearDown(self):
+        behaviour.disable_all()
 
     def test_should_create_fake_elasticsearch_instance(self):
         self.assertIsInstance(self.es, FakeElasticsearch)
@@ -336,6 +339,17 @@ class TestFakeElasticsearch(unittest.TestCase):
         }
 
         self.assertDictEqual(expected, target_doc)
+
+    def test_should_return_internal_server_error_when_simulate_server_error_is_true(self):
+        behaviour.server_failure.enable()
+        data = self.es.index(index=self.index_name, doc_type=self.doc_type, body=self.body)
+
+        expected = {
+            'status_code': 500,
+            'error': 'Internal Server Error'
+        }
+
+        self.assertDictEqual(expected, data)
 
 
 if __name__ == '__main__':

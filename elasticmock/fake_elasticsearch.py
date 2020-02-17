@@ -7,13 +7,16 @@ from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
 
+from elasticmock.behaviour.server_failure import server_failure
 from elasticmock.utilities import get_random_id, get_random_scroll_id
+from elasticmock.utilities.decorator import for_all_methods
 
 PY3 = sys.version_info[0] == 3
 if PY3:
     unicode = str
 
 
+@for_all_methods([server_failure])
 class FakeElasticsearch(Elasticsearch):
     __documents_dict = None
 
