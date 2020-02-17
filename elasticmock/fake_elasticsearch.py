@@ -11,6 +11,7 @@ from elasticmock.behaviour.server_failure import server_failure
 from elasticmock.utilities import get_random_id, get_random_scroll_id
 from elasticmock.utilities.decorator import for_all_methods
 from elasticmock.fake_indices import FakeIndicesClient
+from elasticmock.fake_cluster import FakeClusterClient
 
 PY3 = sys.version_info[0] == 3
 if PY3:
@@ -28,6 +29,10 @@ class FakeElasticsearch(Elasticsearch):
     @property
     def indices(self):
         return FakeIndicesClient(self)
+
+    @property
+    def cluster(self):
+        return FakeClusterClient(self)
 
     @query_params()
     def ping(self, params=None):
