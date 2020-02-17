@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from abc import ABCMeta
-
 from elasticmock import behaviour
 from tests import TestElasticmock
 
 
-class TestElasticmockBehaviour(TestElasticmock, metaclass=ABCMeta):
+class TestElasticmockBehaviour(TestElasticmock):
 
     def tearDown(self):
         behaviour.disable_all()

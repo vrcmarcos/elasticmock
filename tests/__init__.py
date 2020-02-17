@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from abc import ABCMeta
 from datetime import datetime
 
 import elasticsearch
@@ -17,7 +16,7 @@ BODY = {
 }
 
 
-class TestElasticmock(unittest.TestCase, metaclass=ABCMeta):
+class TestElasticmock(unittest.TestCase):
 
     @elasticmock
     def setUp(self):
