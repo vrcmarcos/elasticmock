@@ -2,7 +2,9 @@
 
 Python Elasticsearch Mock for test purposes
 
-[![Build Status](https://travis-ci.org/vrcmarcos/elasticmock.svg?branch=master)](https://travis-ci.org/vrcmarcos/elasticmock) [![Coverage Status](https://coveralls.io/repos/github/vrcmarcos/elasticmock/badge.svg?branch=master)](https://coveralls.io/github/vrcmarcos/elasticmock?branch=master) [![PyPI version](https://badge.fury.io/py/ElasticMock.svg)](https://badge.fury.io/py/ElasticMock) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/vrcmarcos/elasticmock/master/LICENSE) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ElasticMock)
+[![Build Status](https://travis-ci.org/vrcmarcos/elasticmock.svg?branch=master)](https://travis-ci.org/vrcmarcos/elasticmock) [![Coverage Status](https://coveralls.io/repos/github/vrcmarcos/elasticmock/badge.svg?branch=master)](https://coveralls.io/github/vrcmarcos/elasticmock?branch=master) [![PyPI version](https://badge.fury.io/py/ElasticMock.svg)](https://badge.fury.io/py/ElasticMock) [![GitHub license](https://img.shields.io/github/license/vrcmarcos/elasticmock)](https://github.com/vrcmarcos/elasticmock/blob/master/LICENSE) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ElasticMock) ![ElasticSearch Version](https://img.shields.io/badge/elasticsearch-1%20%7C%202%20%7C%205%20%7C%206%20%7C%207-blue) 
+
+![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/pypi/elasticmock) [![Downloads](https://pepy.tech/badge/elasticmock/month)](https://pepy.tech/project/elasticmock/month)
 
 ## Installation
 
