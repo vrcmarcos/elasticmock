@@ -5,7 +5,7 @@ test_install: install
 	@pip install -r requirements_test.txt
 
 test: test_install
-	@py.test --cov-report term-missing --cov=elasticmock
+	@tox -p 20 --parallel--safe-build
 
 upload: create_dist
 	@twine upload dist/*
