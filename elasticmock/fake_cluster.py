@@ -9,7 +9,7 @@ class FakeClusterClient(ClusterClient):
     @query_params('level', 'local', 'master_timeout', 'timeout',
                   'wait_for_active_shards', 'wait_for_nodes',
                   'wait_for_relocating_shards', 'wait_for_status')
-    def health(self, index=None, params=None):
+    def health(self, index=None, params=None, headers=None):
         return {
             'cluster_name': 'testcluster',
             'status': 'green',

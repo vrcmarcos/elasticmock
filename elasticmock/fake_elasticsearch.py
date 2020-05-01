@@ -35,11 +35,11 @@ class FakeElasticsearch(Elasticsearch):
         return FakeClusterClient(self)
 
     @query_params()
-    def ping(self, params=None):
+    def ping(self, params=None, headers=None):
         return True
 
     @query_params()
-    def info(self, params=None):
+    def info(self, params=None, headers=None):
         return {
             'status': 200,
             'cluster_name': 'elasticmock',
@@ -57,7 +57,7 @@ class FakeElasticsearch(Elasticsearch):
 
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
                   'routing', 'timeout', 'timestamp', 'ttl', 'version', 'version_type')
-    def index(self, index, body, doc_type='_doc', id=None, params=None):
+    def index(self, index, body, doc_type='_doc', id=None, params=None, headers=None):
         if index not in self.__documents_dict:
             self.__documents_dict[index] = list()
         
@@ -88,7 +88,7 @@ class FakeElasticsearch(Elasticsearch):
 
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
                   'routing', 'timeout', 'timestamp', 'ttl', 'version', 'version_type')
-    def bulk(self,  body, index=None, doc_type=None, params=None):
+    def bulk(self,  body, index=None, doc_type=None, params=None, headers=None):
         version = 1
         items = []
 
@@ -128,7 +128,7 @@ class FakeElasticsearch(Elasticsearch):
         }
 
     @query_params('parent', 'preference', 'realtime', 'refresh', 'routing')
-    def exists(self, index, doc_type, id, params=None):
+    def exists(self, index, doc_type, id, params=None, headers=None):
         result = False
         if index in self.__documents_dict:
             for document in self.__documents_dict[index]:
@@ -140,7 +140,7 @@ class FakeElasticsearch(Elasticsearch):
     @query_params('_source', '_source_exclude', '_source_include', 'fields',
                   'parent', 'preference', 'realtime', 'refresh', 'routing', 'version',
                   'version_type')
-    def get(self, index, id, doc_type='_all', params=None):
+    def get(self, index, id, doc_type='_all', params=None, headers=None):
         result = None
         if index in self.__documents_dict:
             for document in self.__documents_dict[index]:
@@ -169,7 +169,7 @@ class FakeElasticsearch(Elasticsearch):
     @query_params('_source', '_source_exclude', '_source_include', 'parent',
                   'preference', 'realtime', 'refresh', 'routing', 'version',
                   'version_type')
-    def get_source(self, index, doc_type, id, params=None):
+    def get_source(self, index, doc_type, id, params=None, headers=None):
         document = self.get(index=index, doc_type=doc_type, id=id, params=params)
         return document.get('_source')
 
@@ -181,7 +181,7 @@ class FakeElasticsearch(Elasticsearch):
                   'size', 'sort', 'stats', 'suggest_field', 'suggest_mode',
                   'suggest_size', 'suggest_text', 'terminate_after', 'timeout',
                   'track_scores', 'version')
-    def count(self, index=None, doc_type=None, body=None, params=None):
+    def count(self, index=None, doc_type=None, body=None, params=None, headers=None):
         searchable_indexes = self._normalize_index_to_list(index)
 
         i = 0
@@ -209,7 +209,7 @@ class FakeElasticsearch(Elasticsearch):
                   'size', 'sort', 'stats', 'suggest_field', 'suggest_mode',
                   'suggest_size', 'suggest_text', 'terminate_after', 'timeout',
                   'track_scores', 'version')
-    def search(self, index=None, doc_type=None, body=None, params=None):
+    def search(self, index=None, doc_type=None, body=None, params=None, headers=None):
         searchable_indexes = self._normalize_index_to_list(index)
 
         matches = []
@@ -273,7 +273,7 @@ class FakeElasticsearch(Elasticsearch):
         return result
 
     @query_params('scroll')
-    def scroll(self, scroll_id, params=None):
+    def scroll(self, scroll_id, params=None, headers=None):
         scroll = self.__scrolls.pop(scroll_id)
         result = self.search(
             index=scroll.get('index'),
@@ -285,7 +285,7 @@ class FakeElasticsearch(Elasticsearch):
     
     @query_params('consistency', 'parent', 'refresh', 'replication', 'routing',
                   'timeout', 'version', 'version_type')
-    def delete(self, index, doc_type, id, params=None):
+    def delete(self, index, doc_type, id, params=None, headers=None):
 
         found = False
 
@@ -311,7 +311,7 @@ class FakeElasticsearch(Elasticsearch):
 
     @query_params('allow_no_indices', 'expand_wildcards', 'ignore_unavailable',
                   'preference', 'routing')
-    def suggest(self, body, index=None, params=None):
+    def suggest(self, body, index=None, params=None, headers=None):
         if index is not None and index not in self.__documents_dict:
             raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(index))
 
