@@ -1,4 +1,4 @@
-ELASTICMOCK_VERSION='1.5.0'
+ELASTICMOCK_VERSION='1.5.1'
 
 install:
 	@pip install -r requirements.txt

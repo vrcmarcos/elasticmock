@@ -177,6 +177,9 @@ python setup.py test
 
 ## Changelog
 
+#### 1.5.1:
+- [Fix tests for es > 7](https://github.com/vrcmarcos/elasticmock/pull/38) (Thanks [@chesstrian](https://github.com/chesstrian))
+
 #### 1.5.0:
 - [**FakeElasticSearch**: Mocked **indices** property](https://github.com/vrcmarcos/elasticmock/issues/22)
   - **FakeIndicesClient**: Mocked **create**, **exists**, **refresh** and **delete** methods
