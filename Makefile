@@ -1,3 +1,5 @@
+ELASTICMOCK_VERSION='1.5.0'
+
 install:
 	@pip install -r requirements.txt
 
@@ -10,10 +12,15 @@ test: test_install
 upload: create_dist
 	@pip install twine
 	@twine upload dist/*
+	@git push
 
-create_dist: update_pip
+create_dist: create_dist_commit update_pip
 	@rm -rf dist
 	@python setup.py sdist
+
+create_dist_commit:
+	@git commit --all -m "Bump version ${ELASTICMOCK_VERSION}"
+	@git tag ${ELASTICMOCK_VERSION}
 
 update_pip:
 	@pip install --upgrade pip
