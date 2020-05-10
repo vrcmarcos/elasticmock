@@ -8,13 +8,12 @@ test: test_install
 	@tox -p 20 --parallel--safe-build
 
 upload: create_dist
+	@pip install twine
 	@twine upload dist/*
 
-create_dist: install_twine
+create_dist: update_pip
+	@rm -rf dist
 	@python setup.py sdist
-
-install_twine: update_pip
-	@pip install twine
 
 update_pip:
 	@pip install --upgrade pip
