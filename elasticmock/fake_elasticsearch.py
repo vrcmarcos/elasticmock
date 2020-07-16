@@ -294,7 +294,6 @@ class FakeElasticsearch(Elasticsearch):
                     if isinstance(doc_type, str) and document.get('_type') != doc_type:
                         continue
                 if conditions:
-                    match = False
                     for condition in conditions:
                         if condition.evaluate(document):
                             matches.append(document)
