@@ -45,9 +45,28 @@ class FakeQueryCondition:
     
     def _evaluate_for_query_type(self, document):
         if self.type == MATCH:
-            return self._evaluate_for_match_type(document)
+            return self._evaluate_for_match_query_type(document)
+        if self.type == TERM:
+            return self._evaluate_for_term_query_type(document)
     
-    def _evaluate_for_match_type(self, document):
+    def _evaluate_for_match_query_type(self, document):
+        doc_source = document['_source']
+        return_val = False
+        for field, value in self.condition.items():
+            value = str(value).lower()
+            if hasattr(doc_source, field):
+                doc_val = str(getattr(doc_source, field)).lower()
+                if value in doc_val:
+                    return_val = True
+                    break
+            elif field in doc_source:
+                doc_val = str(doc_source[field]).lower()
+                if value in doc_val:
+                    return_val = True
+                    break
+        return return_val
+
+    def _evaluate_for_term_query_type(self, document):
         doc_source = document['_source']
         return_val = False
         for field, value in self.condition.items():
@@ -62,7 +81,6 @@ class FakeQueryCondition:
                     return_val = True
                     break
         return return_val
-
 
 @for_all_methods([server_failure])
 class FakeElasticsearch(Elasticsearch):
