@@ -18,13 +18,19 @@ if PY3:
     unicode = str
 
 
-class MatchType:
-    MATCH = object()
+MATCH = object()
+TERM = object()
+
+
+class QueryType:
 
     @classmethod
-    def get_match_type(cls, type_str):
+    def get_query_type(cls, type_str):
         if type_str == 'match':
-            return cls.MATCH
+            return MATCH
+        elif type_str == 'term':
+            return TERM
+
 
 class FakeQueryCondition:
     type = None
@@ -35,8 +41,15 @@ class FakeQueryCondition:
         self.condition = condition
     
     def evaluate(self, document):
-        return_val = False
+        return self._evaluate_for_query_type(document)
+    
+    def _evaluate_for_query_type(self, document):
+        if self.type == MATCH:
+            return self._evaluate_for_match_type(document)
+    
+    def _evaluate_for_match_type(self, document):
         doc_source = document['_source']
+        return_val = False
         for field, value in self.condition.items():
             if hasattr(doc_source, field):
                 doc_val = str(getattr(doc_source, field))
@@ -49,6 +62,7 @@ class FakeQueryCondition:
                     return_val = True
                     break
         return return_val
+
 
 @for_all_methods([server_failure])
 class FakeElasticsearch(Elasticsearch):
@@ -233,8 +247,8 @@ class FakeElasticsearch(Elasticsearch):
 
         return result
 
-    def _get_fake_query_condition(self, match_type_str, condition):
-        return FakeQueryCondition(MatchType.get_match_type(match_type_str), condition)
+    def _get_fake_query_condition(self, query_type_str, condition):
+        return FakeQueryCondition(QueryType.get_query_type(query_type_str), condition)
 
     @query_params('_source', '_source_exclude', '_source_include',
                   'allow_no_indices', 'analyze_wildcard', 'analyzer', 'default_operator',
@@ -252,8 +266,8 @@ class FakeElasticsearch(Elasticsearch):
 
         if body and 'query' in body:
             query = body['query']
-            for match_type, condition in query.items():
-                conditions.append(self._get_fake_query_condition(match_type, condition))
+            for query_type_str, condition in query.items():
+                conditions.append(self._get_fake_query_condition(query_type_str, condition))
         for searchable_index in searchable_indexes:
             for document in self.__documents_dict[searchable_index]:
                 if doc_type:
