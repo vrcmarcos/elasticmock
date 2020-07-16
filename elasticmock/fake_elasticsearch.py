@@ -18,6 +18,38 @@ if PY3:
     unicode = str
 
 
+class MatchType:
+    MATCH = object()
+
+    @classmethod
+    def get_match_type(cls, type_str):
+        if type_str == 'match':
+            return cls.MATCH
+
+class FakeQueryCondition:
+    type = None
+    conditon = None
+
+    def __init__(self, type, condition):
+        self.type = type
+        self.condition = condition
+    
+    def evaluate(self, document):
+        return_val = False
+        doc_source = document['_source']
+        for field, value in self.condition.items():
+            if hasattr(doc_source, field):
+                doc_val = str(getattr(doc_source, field))
+                if str(value) in doc_val:
+                    return_val = True
+                    break
+            elif field in doc_source:
+                doc_val = str(doc_source[field])
+                if str(value) in doc_val:
+                    return_val = True
+                    break
+        return return_val
+
 @for_all_methods([server_failure])
 class FakeElasticsearch(Elasticsearch):
     __documents_dict = None
@@ -201,6 +233,9 @@ class FakeElasticsearch(Elasticsearch):
 
         return result
 
+    def _get_fake_query_condition(self, match_type_str, condition):
+        return FakeQueryCondition(MatchType.get_match_type(match_type_str), condition)
+
     @query_params('_source', '_source_exclude', '_source_include',
                   'allow_no_indices', 'analyze_wildcard', 'analyzer', 'default_operator',
                   'df', 'expand_wildcards', 'explain', 'fielddata_fields', 'fields',
@@ -213,6 +248,12 @@ class FakeElasticsearch(Elasticsearch):
         searchable_indexes = self._normalize_index_to_list(index)
 
         matches = []
+        conditions = []
+
+        if body and 'query' in body:
+            query = body['query']
+            for match_type, condition in query.items():
+                conditions.append(self._get_fake_query_condition(match_type, condition))
         for searchable_index in searchable_indexes:
             for document in self.__documents_dict[searchable_index]:
                 if doc_type:
@@ -220,7 +261,14 @@ class FakeElasticsearch(Elasticsearch):
                         continue
                     if isinstance(doc_type, str) and document.get('_type') != doc_type:
                         continue
-                matches.append(document)
+                if conditions:
+                    match = False
+                    for condition in conditions:
+                        if condition.evaluate(document):
+                            matches.append(document)
+                            break
+                else:
+                    matches.append(document)
 
         result = {
             'hits': {

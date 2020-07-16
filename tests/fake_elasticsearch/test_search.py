@@ -65,3 +65,11 @@ class TestSearch(TestElasticmock):
         self.assertNotEqual(None, result.get('_scroll_id', None))
         self.assertEqual(30, len(result.get('hits').get('hits')))
         self.assertEqual(100, result.get('hits').get('total'))
+
+    def test_search_for_keyword(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': f'test_{i}'})
+        
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 'test_3' } } })
+        self.assertEqual(response['hits']['total'], 1)
+        
