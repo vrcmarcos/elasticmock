@@ -68,7 +68,7 @@ class TestSearch(TestElasticmock):
 
     def test_search_for_keyword(self):
         for i in range(0, 10):
-            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': f'test_{i}'})
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
         
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 'test_3' } } })
         self.assertEqual(response['hits']['total'], 1)
