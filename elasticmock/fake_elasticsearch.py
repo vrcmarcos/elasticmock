@@ -53,34 +53,48 @@ class FakeQueryCondition:
         doc_source = document['_source']
         return_val = False
         for field, value in self.condition.items():
-            value = str(value).lower()
-            if hasattr(doc_source, field):
-                doc_val = str(getattr(doc_source, field)).lower()
-                if value in doc_val:
-                    return_val = True
-                    break
-            elif field in doc_source:
-                doc_val = str(doc_source[field]).lower()
-                if value in doc_val:
-                    return_val = True
-                    break
+            return_val = self._compare_value_for_field(doc_source, field, value, True)
+            if return_val:
+                break
         return return_val
 
     def _evaluate_for_term_query_type(self, document):
         doc_source = document['_source']
         return_val = False
         for field, value in self.condition.items():
-            if hasattr(doc_source, field):
-                doc_val = str(getattr(doc_source, field))
-                if str(value) in doc_val:
-                    return_val = True
-                    break
-            elif field in doc_source:
-                doc_val = str(doc_source[field])
-                if str(value) in doc_val:
-                    return_val = True
-                    break
+            return_val = self._compare_value_for_field(doc_source, field, value, False)
+            if return_val:
+                break
         return return_val
+
+    def _compare_value_for_field(self, doc_source, field, value, ignore_case):
+        value = str(value).lower() if ignore_case and isinstance(value, str) else value
+        doc_val = None
+        if hasattr(doc_source, field):
+            doc_val = getattr(doc_source, field)
+        elif field in doc_source:
+            doc_val = doc_source[field]
+
+        if isinstance(doc_val, list):
+            for val in doc_val:
+                val = val if isinstance(val, (int, float, complex)) else str(val)
+                if ignore_case and isinstance(val, str):
+                    val = val.lower()
+                if isinstance(val, str) and value in val:
+                    return True
+                if value == val:
+                    return True
+        else:
+            doc_val = doc_val if isinstance(doc_val, (int, float, complex)) else str(doc_val)
+            if ignore_case and isinstance(doc_val, str):
+                doc_val = doc_val.lower()
+            if isinstance(doc_val, str) and value in doc_val:
+                return True
+            if value == doc_val:
+                return True
+
+        return False
+
 
 @for_all_methods([server_failure])
 class FakeElasticsearch(Elasticsearch):

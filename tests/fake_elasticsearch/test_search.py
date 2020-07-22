@@ -75,7 +75,26 @@ class TestSearch(TestElasticmock):
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]['_source'], {'data': 'test_3'})
-        
+
+    def test_search_with_match_query_in_int_list(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [i, 11, 13]})
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 1 } } })
+        self.assertEqual(response['hits']['total'], 1)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['_source'], {'data': [1, 11, 13] })
+
+    def test_search_with_match_query_in_string_list(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [str(i), 'two', 'three']})
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '1' } } })
+        self.assertEqual(response['hits']['total'], 1)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['_source'], {'data': ['1', 'two', 'three']})
+
     def test_search_with_term_query(self):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
