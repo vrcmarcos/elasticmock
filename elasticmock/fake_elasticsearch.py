@@ -20,21 +20,24 @@ if PY3:
 
 class QueryType:
 
-    MATCH = object()
-    TERM = object()
-    BOOL = object()
-    FILTER = object()
+    BOOL = 'BOOL'
+    FILTER = 'FILTER'
+    MATCH = 'MATCH'
+    TERM = 'TERM'
+    TERMS = 'TERMS'
 
     @staticmethod
     def get_query_type(type_str):
-        if type_str == 'match':
-            return QueryType.MATCH
-        elif type_str == 'term':
-            return QueryType.TERM
-        elif type_str == 'bool':
+        if type_str == 'bool':
             return QueryType.BOOL
         elif type_str == 'filter':
             return QueryType.FILTER
+        elif type_str == 'match':
+            return QueryType.MATCH
+        elif type_str == 'term':
+            return QueryType.TERM
+        elif type_str == 'terms':
+            return QueryType.TERMS
         else:
             raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
 
@@ -88,10 +91,17 @@ class FakeQueryCondition:
                     QueryType.get_query_type(query_type),
                     sub_query
                 ).evaluate(document)
-                if return_val:
-                    break
+                if not return_val:
+                    return False
         elif isinstance(self.condition, list):
-            raise NotImplementedError()
+            for sub_condition in self.condition:
+                for sub_condition_key in sub_condition:
+                    return_val = FakeQueryCondition(
+                        QueryType.get_query_type(sub_condition_key),
+                        sub_condition[sub_condition_key]
+                    ).evaluate(document)
+                    if not return_val:
+                        return False
 
         return return_val
 
