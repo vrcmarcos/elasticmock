@@ -56,18 +56,29 @@ class FakeQueryCondition:
     def _evaluate_for_query_type(self, document):
         if self.type == QueryType.MATCH:
             return self._evaluate_for_match_query_type(document)
-        if self.type == QueryType.TERM:
+        elif self.type == QueryType.TERM:
             return self._evaluate_for_term_query_type(document)
-        if self.type == QueryType.BOOL:
+        elif self.type == QueryType.TERMS:
+            return self._evaluate_for_terms_query_type(document)
+        elif self.type == QueryType.BOOL:
             return self._evaluate_for_compound_query_type(document)
-        if self.type == QueryType.FILTER:
+        elif self.type == QueryType.FILTER:
             return self._evaluate_for_compound_query_type(document)
+        else:
+            raise NotImplementedError('Fake query evaluation not implemented for query type: %s' % self.type)
 
     def _evaluate_for_match_query_type(self, document):
         return self._evaluate_for_field(document, True)
 
     def _evaluate_for_term_query_type(self, document):
         return self._evaluate_for_field(document, False)
+
+    def _evaluate_for_terms_query_type(self, document):
+        for field in self.condition:
+            for term in self.condition[field]:
+                if FakeQueryCondition(QueryType.TERM, {field: term}).evaluate(document):
+                    return True
+        return False
 
     def _evaluate_for_field(self, document, ignore_case):
         doc_source = document['_source']

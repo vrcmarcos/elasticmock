@@ -123,3 +123,12 @@ class TestSearch(TestElasticmock):
         self.assertEqual(response['hits']['total'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
+
+    def test_search_with_terms_query(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'id': i})
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'terms': {'id': [1, 2, 3]}}})
+        self.assertEqual(response['hits']['total'], 3)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 3)
