@@ -65,3 +65,70 @@ class TestSearch(TestElasticmock):
         self.assertNotEqual(None, result.get('_scroll_id', None))
         self.assertEqual(30, len(result.get('hits').get('hits')))
         self.assertEqual(100, result.get('hits').get('total'))
+
+    def test_search_with_match_query(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 'TEST' } } })
+        self.assertEqual(response['hits']['total'], 10)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 10)
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '3' } } })
+        self.assertEqual(response['hits']['total'], 1)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['_source'], {'data': 'test_3'})
+
+    def test_search_with_match_query_in_int_list(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [i, 11, 13]})
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 1 } } })
+        self.assertEqual(response['hits']['total'], 1)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['_source'], {'data': [1, 11, 13] })
+
+    def test_search_with_match_query_in_string_list(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [str(i), 'two', 'three']})
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '1' } } })
+        self.assertEqual(response['hits']['total'], 1)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['_source'], {'data': ['1', 'two', 'three']})
+
+    def test_search_with_term_query(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'term': {'data': 'TEST' } } })
+        self.assertEqual(response['hits']['total'], 0)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 0)
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'term': {'data': '3' } } })
+        self.assertEqual(response['hits']['total'], 1)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['_source'], {'data': 'test_3'})
+
+    def test_search_with_bool_query(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'id': i})
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'bool': {'filter': [{'term': {'id': 1}}]}}})
+        self.assertEqual(response['hits']['total'], 1)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 1)
+
+    def test_search_with_terms_query(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'id': i})
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'terms': {'id': [1, 2, 3]}}})
+        self.assertEqual(response['hits']['total'], 3)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 3)
