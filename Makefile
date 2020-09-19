@@ -14,7 +14,11 @@ upload: create_dist
 	twine upload dist/*
 	git push
 
-create_dist: create_dist_commit update_pip
+create_dist: create_dist_no_commit update_pip
+	rm -rf dist
+	python3 setup.py sdist
+
+create_dist_no_commit: update_pip
 	rm -rf dist
 	python3 setup.py sdist
 

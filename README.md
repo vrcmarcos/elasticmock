@@ -177,6 +177,9 @@ python setup.py test
 
 ## Changelog
 
+#### 1.6.0:
+- [Implements several basic search types](https://github.com/vrcmarcos/elasticmock/pull/42) (Thanks [@KyKoPho](https://github.com/KyKoPho))
+
 #### 1.5.1:
 - [Fix tests for es > 7](https://github.com/vrcmarcos/elasticmock/pull/38) (Thanks [@chesstrian](https://github.com/chesstrian))
 
