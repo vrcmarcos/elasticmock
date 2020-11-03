@@ -11,6 +11,14 @@ class TestDelete(TestElasticmock):
         with self.assertRaises(NotFoundError):
             self.es.delete(index=INDEX_NAME, doc_type=DOC_TYPE, id=1)
 
+    def test_should_not_raise_exception_when_delete_nonindexed_document_if_ignored(self):
+        target_doc = self.es.delete(index=INDEX_NAME, doc_type=DOC_TYPE, id=1, ignore=404)
+        self.assertFalse(target_doc.get('found'))
+
+    def test_should_not_raise_exception_when_delete_nonindexed_document_if_ignored_list(self):
+        target_doc = self.es.delete(index=INDEX_NAME, doc_type=DOC_TYPE, id=1, ignore=(401, 404))
+        self.assertFalse(target_doc.get('found'))
+
     def test_should_delete_indexed_document(self):
         doc_indexed = self.es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=BODY)
         search = self.es.search(index=INDEX_NAME)
