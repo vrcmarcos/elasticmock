@@ -8,7 +8,7 @@ from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
 
 from elasticmock.behaviour.server_failure import server_failure
-from elasticmock.utilities import get_random_id, get_random_scroll_id
+from elasticmock.utilities import extract_ignore_as_iterable, get_random_id, get_random_scroll_id
 from elasticmock.utilities.decorator import for_all_methods
 from elasticmock.fake_indices import FakeIndicesClient
 from elasticmock.fake_cluster import FakeClusterClient
@@ -280,7 +280,9 @@ class FakeElasticsearch(Elasticsearch):
                   'parent', 'preference', 'realtime', 'refresh', 'routing', 'version',
                   'version_type')
     def get(self, index, id, doc_type='_all', params=None, headers=None):
+        ignore = extract_ignore_as_iterable(params)
         result = None
+
         if index in self.__documents_dict:
             for document in self.__documents_dict[index]:
                 if document.get('_id') == id:
@@ -294,6 +296,9 @@ class FakeElasticsearch(Elasticsearch):
 
         if result:
             result['found'] = True
+            return result
+        elif params and 404 in ignore:
+            return {'found': False}
         else:
             error_data = {
                 '_index': index,
@@ -303,7 +308,6 @@ class FakeElasticsearch(Elasticsearch):
             }
             raise NotFoundError(404, json.dumps(error_data))
 
-        return result
 
     @query_params('_source', '_source_exclude', '_source_include', 'parent',
                   'preference', 'realtime', 'refresh', 'routing', 'version',
@@ -442,6 +446,7 @@ class FakeElasticsearch(Elasticsearch):
     def delete(self, index, doc_type, id, params=None, headers=None):
 
         found = False
+        ignore = extract_ignore_as_iterable(params)
 
         if index in self.__documents_dict:
             for document in self.__documents_dict[index]:
@@ -460,6 +465,8 @@ class FakeElasticsearch(Elasticsearch):
 
         if found:
             return result_dict
+        elif params and 404 in ignore:
+            return {'found': False}
         else:
             raise NotFoundError(404, json.dumps(result_dict))
 

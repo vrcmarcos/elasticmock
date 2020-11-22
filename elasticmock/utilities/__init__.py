@@ -16,3 +16,11 @@ def get_random_id(size=DEFAULT_ELASTICSEARCH_ID_SIZE):
 
 def get_random_scroll_id(size=DEFAULT_ELASTICSEARCH_SEARCHRESULTPHASE_COUNT):
     return base64.b64encode(''.join(get_random_id() for _ in range(size)).encode())
+
+
+def extract_ignore_as_iterable(params):
+    """Extracts the value of the ignore parameter as iterable"""
+    ignore = params.get('ignore', ())
+    if isinstance(ignore, int):
+        ignore = (ignore,)
+    return ignore
