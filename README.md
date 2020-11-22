@@ -177,6 +177,9 @@ python setup.py test
 
 ## Changelog
 
+#### 1.6.1:
+- Fix Twine README.md
+
 #### 1.6.0:
 - [Implements several basic search types](https://github.com/vrcmarcos/elasticmock/pull/42) (Thanks [@KyKoPho](https://github.com/KyKoPho))
 - [Allow ignoring of missing documents (404) for get and delete](https://github.com/vrcmarcos/elasticmock/pull/44) (Thanks [@joosterman](https://github.com/joosterman))
