@@ -23,6 +23,7 @@ class QueryType:
     BOOL = 'BOOL'
     FILTER = 'FILTER'
     MATCH = 'MATCH'
+    MATCH_ALL = 'MATCH_ALL'
     TERM = 'TERM'
     TERMS = 'TERMS'
 
@@ -34,6 +35,8 @@ class QueryType:
             return QueryType.FILTER
         elif type_str == 'match':
             return QueryType.MATCH
+        elif type_str == 'match_all':
+            return QueryType.MATCH_ALL        
         elif type_str == 'term':
             return QueryType.TERM
         elif type_str == 'terms':
