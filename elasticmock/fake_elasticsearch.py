@@ -25,6 +25,7 @@ class QueryType:
     MATCH = 'MATCH'
     TERM = 'TERM'
     TERMS = 'TERMS'
+    MUST = 'MUST'
 
     @staticmethod
     def get_query_type(type_str):
@@ -38,6 +39,8 @@ class QueryType:
             return QueryType.TERM
         elif type_str == 'terms':
             return QueryType.TERMS
+        elif type_str == 'must':
+            return QueryType.MUST
         else:
             raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
 
