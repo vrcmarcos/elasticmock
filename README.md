@@ -177,6 +177,10 @@ python setup.py test
 
 ## Changelog
 
+#### 1.6.2:
+- [Add must to query type](https://github.com/vrcmarcos/elasticmock/pull/47) (Thanks [@cuent](https://github.com/cuent))
+- [Add match all query type](https://github.com/vrcmarcos/elasticmock/pull/48) (Thanks [@cuent](https://github.com/cuent))
+
 #### 1.6.1:
 - Fix Twine README.md
 
