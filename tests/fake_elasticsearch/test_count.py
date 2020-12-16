@@ -20,3 +20,8 @@ class TestCount(TestElasticmock):
 
         result = self.es.count(index=['users', 'pcs'])
         self.assertEqual(2, result.get('count'))
+
+    def test_should_count_with_empty_doc_types(self):
+        self.es.index(index='index', doc_type=DOC_TYPE, body={'data': 'test'})
+        count = self.es.count(doc_type=[])
+        self.assertEqual(1, count.get('count'))
