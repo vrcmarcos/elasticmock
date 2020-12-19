@@ -336,7 +336,7 @@ class FakeElasticsearch(Elasticsearch):
         i = 0
         for searchable_index in searchable_indexes:
             for document in self.__documents_dict[searchable_index]:
-                if doc_type is not None and document.get('_type') != doc_type:
+                if doc_type and document.get('_type') != doc_type:
                     continue
                 i += 1
         result = {
