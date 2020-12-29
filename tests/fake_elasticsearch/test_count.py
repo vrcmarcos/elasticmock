@@ -26,6 +26,11 @@ class TestCount(TestElasticmock):
         count = self.es.count(doc_type=[])
         self.assertEqual(1, count.get('count'))
 
+    def test_should_return_skipped_shards(self):
+        self.es.index(index='index', doc_type=DOC_TYPE, body={'data': 'test'})
+        count = self.es.count(doc_type=[])
+        self.assertEqual(0, count.get('_shards').get('skipped'))
+
     def test_should_count_with_doc_types(self):
         self.es.index(index='index', doc_type=DOC_TYPE, body={'data': 'test1'})
         self.es.index(index='index', doc_type='different-doc-type', body={'data': 'test2'})
