@@ -132,3 +132,15 @@ class TestSearch(TestElasticmock):
         self.assertEqual(response['hits']['total'], 3)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 3)
+
+    def test_query_on_nested_data(self):
+        for i, y in enumerate(['yes', 'no']):
+            self.es.index('index_for_search', doc_type=DOC_TYPE,
+                          body={'id': i, 'data': {'x': i, 'y': y}})
+
+        for term, value, i in [('data.x', 1, 1), ('data.y', 'yes', 0)]:
+            response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                      body={'query': {'term': {term: value}}})
+            self.assertEqual(1, response['hits']['total'])
+            doc = response['hits']['hits'][0]['_source']
+            self.assertEqual(i, doc['id'])
