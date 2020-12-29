@@ -24,6 +24,14 @@ class TestSearch(TestElasticmock):
         search = self.es.search()
         self.assertEqual(index_quantity, search.get('hits').get('total'))
 
+    def test_should_return_all_documents_match_all(self):
+        index_quantity = 10
+        for i in range(0, index_quantity):
+            self.es.index(index='index_{0}'.format(i), doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
+
+        search = self.es.search(body={'query': {'match_all': {}}})
+        self.assertEqual(index_quantity, search.get('hits').get('total'))
+
     def test_should_return_only_indexed_documents_on_index(self):
         index_quantity = 2
         for i in range(0, index_quantity):
