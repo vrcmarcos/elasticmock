@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import datetime
 import json
 import sys
 
@@ -27,6 +27,7 @@ class QueryType:
     TERM = 'TERM'
     TERMS = 'TERMS'
     MUST = 'MUST'
+    RANGE = 'RANGE'
 
     @staticmethod
     def get_query_type(type_str):
@@ -44,6 +45,8 @@ class QueryType:
             return QueryType.TERMS
         elif type_str == 'must':
             return QueryType.MUST
+        elif type_str == 'range':
+            return QueryType.RANGE
         else:
             raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
 
@@ -68,6 +71,8 @@ class FakeQueryCondition:
             return self._evaluate_for_term_query_type(document)
         elif self.type == QueryType.TERMS:
             return self._evaluate_for_terms_query_type(document)
+        elif self.type == QueryType.RANGE:
+            return self._evaluate_for_range_query_type(document)
         elif self.type == QueryType.BOOL:
             return self._evaluate_for_compound_query_type(document)
         elif self.type == QueryType.FILTER:
@@ -101,6 +106,46 @@ class FakeQueryCondition:
             if return_val:
                 break
         return return_val
+
+    def _evaluate_for_range_query_type(self, document):
+        for field, comparisons in self.condition.items():
+            doc_val = document['_source']
+            for k in field.split("."):
+                if hasattr(doc_val, k):
+                    doc_val = getattr(doc_val, k)
+                elif k in doc_val:
+                    doc_val = doc_val[k]
+                else:
+                    return False
+
+            if isinstance(doc_val, list):
+                return False
+
+            for sign, value in comparisons.items():
+                if isinstance(doc_val, datetime.datetime):
+                    value = datetime.datetime.fromisoformat(value)
+                # we can also use this:
+                # try:
+                #     if not getattr(doc_val, f"__{sign}__")(value):
+                #         return False
+                # except AttributeError:
+                #     raise ValueError(f"Invalid comparison type {sign}") from None
+                if sign == 'gte':
+                    if doc_val < value:
+                        return False
+                elif sign == 'gt':
+                    if doc_val <= value:
+                        return False
+                elif sign == 'lte':
+                    if doc_val > value:
+                        return False
+                elif sign == 'lt':
+                    if doc_val >= value:
+                        return False
+                else:
+                    raise ValueError(f"Invalid comparison type {sign}")
+            return True
+
 
     def _evaluate_for_compound_query_type(self, document):
         return_val = False
@@ -387,6 +432,9 @@ class FakeElasticsearch(Elasticsearch):
                 else:
                     matches.append(document)
 
+        for match in matches:
+            self._find_and_convert_data_types(match['_source'])
+
         result = {
             'hits': {
                 'total': len(matches),
@@ -522,3 +570,11 @@ class FakeElasticsearch(Elasticsearch):
                 raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(searchable_index))
 
         return searchable_indexes
+
+    @classmethod
+    def _find_and_convert_data_types(cls, document):
+        for key, value in document.items():
+            if isinstance(value, dict):
+                cls._find_and_convert_data_types(value)
+            elif isinstance(value, datetime.datetime):
+                document[key] = value.isoformat()

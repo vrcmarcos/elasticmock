@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import datetime
+import unittest
 
 from elasticsearch.exceptions import NotFoundError
+from parameterized import parameterized
 
 from tests import TestElasticmock, INDEX_NAME, DOC_TYPE
 
@@ -156,3 +159,81 @@ class TestSearch(TestElasticmock):
             self.assertEqual(1, response['hits']['total'])
             doc = response['hits']['hits'][0]['_source']
             self.assertEqual(i, doc['id'])
+
+    @parameterized.expand(
+        [
+            (
+                'timestamp gt',
+                {'timestamp': {'gt': datetime.datetime(2009, 1, 1, 10, 20, 0).isoformat()}},
+                range(5, 12),
+            ),
+            (
+                'timestamp gte',
+                {'timestamp': {'gte': datetime.datetime(2009, 1, 1, 10, 20, 0).isoformat()}},
+                range(4, 12),
+            ),
+            (
+                'timestamp lt',
+                {'timestamp': {'lt': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat()}},
+                range(7),
+            ),
+            (
+                'timestamp lte',
+                {'timestamp': {'lte': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat()}},
+                range(8),
+            ),
+            (
+                'timestamp combination',
+                {
+                    'timestamp': {
+                        'gt': datetime.datetime(2009, 1, 1, 10, 15, 0).isoformat(),
+                        'lte': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat(),
+                    }
+                },
+                range(4, 8),
+            ),
+            (
+                'data_int gt',
+                {'data_int': {'gt': 40}},
+                range(5, 12),
+            ),
+            (
+                'data_int gte',
+                {'data_int': {'gte': 40}},
+                range(4, 12),
+            ),
+            (
+                'data_int lt',
+                {'data_int': {'lt': 70}},
+                range(7),
+            ),
+            (
+                'data_int lte',
+                {'data_int': {'lte': 70}},
+                range(8),
+            ),
+            (
+                'data_int combination',
+                {'data_int': {'gt': 30, 'lte': 70}},
+                range(4, 8),
+            ),
+        ]
+    )
+    def test_search_with_range_query(self, _, query_range, expected_ids):
+        for i in range(0, 12):
+            body = {
+                'id': i,
+                'timestamp': datetime.datetime(2009, 1, 1, 10, 5 * i, 0),
+                'data_int': 10 * i,
+            }
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body=body)
+
+        response = self.es.search(
+            index='index_for_search',
+            doc_type=DOC_TYPE,
+            body={'query': {'range': query_range}},
+        )
+
+        self.assertEqual(len(expected_ids), response['hits']['total'])
+        hits = response['hits']['hits']
+        self.assertEqual(set(expected_ids), set(hit['_source']['id'] for hit in hits))
