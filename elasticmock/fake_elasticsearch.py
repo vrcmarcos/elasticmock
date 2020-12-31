@@ -125,32 +125,30 @@ class FakeQueryCondition:
         return return_val
 
     def _compare_value_for_field(self, doc_source, field, value, ignore_case):
-        value = str(value).lower() if ignore_case and isinstance(value, str) \
-            else value
-        doc_val = None
-        if hasattr(doc_source, field):
-            doc_val = getattr(doc_source, field)
-        elif field in doc_source:
-            doc_val = doc_source[field]
+        if ignore_case and isinstance(value, str):
+            value = value.lower()
 
-        if isinstance(doc_val, list):
-            for val in doc_val:
-                val = val if isinstance(val, (int, float, complex)) \
-                    else str(val)
-                if ignore_case and isinstance(val, str):
+        doc_val = doc_source
+        for k in field.split("."):
+            if hasattr(doc_val, k):
+                doc_val = getattr(doc_val, k)
+            elif k in doc_val:
+                doc_val = doc_val[k]
+            else:
+                return False
+
+        if not isinstance(doc_val, list):
+            doc_val = [doc_val]
+
+        for val in doc_val:
+            if not isinstance(val, (int, float, complex)) or val is None:
+                val = str(val)
+                if ignore_case:
                     val = val.lower()
-                if isinstance(val, str) and value in val:
-                    return True
-                if value == val:
-                    return True
-        else:
-            doc_val = doc_val if isinstance(doc_val, (int, float, complex)) \
-                else str(doc_val)
-            if ignore_case and isinstance(doc_val, str):
-                doc_val = doc_val.lower()
-            if isinstance(doc_val, str) and value in doc_val:
+
+            if value == val:
                 return True
-            if value == doc_val:
+            if isinstance(val, str) and value in val:
                 return True
 
         return False
