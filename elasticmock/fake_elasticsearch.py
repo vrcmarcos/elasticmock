@@ -62,6 +62,8 @@ class FakeQueryCondition:
     def _evaluate_for_query_type(self, document):
         if self.type == QueryType.MATCH:
             return self._evaluate_for_match_query_type(document)
+        elif self.type == QueryType.MATCH_ALL:
+            return True
         elif self.type == QueryType.TERM:
             return self._evaluate_for_term_query_type(document)
         elif self.type == QueryType.TERMS:
