@@ -16,6 +16,10 @@ class TestSearch(TestElasticmock):
         self.assertEqual(0, search.get('hits').get('total'))
         self.assertListEqual([], search.get('hits').get('hits'))
 
+    def test_should_return_skipped_shards(self):
+        search = self.es.search()
+        self.assertEqual(0, search.get('_shards').get('skipped'))
+
     def test_should_return_all_documents(self):
         index_quantity = 10
         for i in range(0, index_quantity):

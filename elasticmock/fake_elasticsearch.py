@@ -343,6 +343,7 @@ class FakeElasticsearch(Elasticsearch):
             'count': i,
             '_shards': {
                 'successful': 1,
+                'skipped': 0,
                 'failed': 0,
                 'total': 1
             }
@@ -394,6 +395,7 @@ class FakeElasticsearch(Elasticsearch):
             '_shards': {
                 # Simulate indexes with 1 shard each
                 'successful': len(searchable_indexes),
+                'skipped': 0,
                 'failed': 0,
                 'total': len(searchable_indexes)
             },
