@@ -418,7 +418,11 @@ class FakeElasticsearch(Elasticsearch):
             for query_type_str, condition in query.items():
                 conditions.append(self._get_fake_query_condition(query_type_str, condition))
         for searchable_index in searchable_indexes:
+
             for document in self.__documents_dict[searchable_index]:
+                if len(matches) >= int(params.get('size', 10_000)):
+                    break
+
                 if doc_type:
                     if isinstance(doc_type, list) and document.get('_type') not in doc_type:
                         continue
