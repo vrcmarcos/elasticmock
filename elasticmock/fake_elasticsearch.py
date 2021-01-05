@@ -2,16 +2,18 @@
 import datetime
 import json
 import sys
+from collections import defaultdict
 
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
+from elasticsearch_dsl import AttrDict
 
 from elasticmock.behaviour.server_failure import server_failure
+from elasticmock.fake_cluster import FakeClusterClient
+from elasticmock.fake_indices import FakeIndicesClient
 from elasticmock.utilities import extract_ignore_as_iterable, get_random_id, get_random_scroll_id
 from elasticmock.utilities.decorator import for_all_methods
-from elasticmock.fake_indices import FakeIndicesClient
-from elasticmock.fake_cluster import FakeClusterClient
 
 PY3 = sys.version_info[0] == 3
 if PY3:
@@ -19,7 +21,6 @@ if PY3:
 
 
 class QueryType:
-
     BOOL = 'BOOL'
     FILTER = 'FILTER'
     MATCH = 'MATCH'
@@ -38,7 +39,7 @@ class QueryType:
         elif type_str == 'match':
             return QueryType.MATCH
         elif type_str == 'match_all':
-            return QueryType.MATCH_ALL        
+            return QueryType.MATCH_ALL
         elif type_str == 'term':
             return QueryType.TERM
         elif type_str == 'terms':
@@ -49,6 +50,17 @@ class QueryType:
             return QueryType.RANGE
         else:
             raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
+
+
+class MetricType:
+    CARDINALITY = "CARDINALITY"
+
+    @staticmethod
+    def get_metric_type(type_str):
+        if type_str == "cardinality":
+            return MetricType.CARDINALITY
+        else:
+            raise NotImplementedError(f'type {type_str} is not implemented for MetricType')
 
 
 class FakeQueryCondition:
@@ -145,7 +157,6 @@ class FakeQueryCondition:
                 else:
                     raise ValueError(f"Invalid comparison type {sign}")
             return True
-
 
     def _evaluate_for_compound_query_type(self, document):
         return_val = False
@@ -250,7 +261,7 @@ class FakeElasticsearch(Elasticsearch):
     def index(self, index, body, doc_type='_doc', id=None, params=None, headers=None):
         if index not in self.__documents_dict:
             self.__documents_dict[index] = list()
-        
+
         version = 1
 
         if id is None:
@@ -278,7 +289,7 @@ class FakeElasticsearch(Elasticsearch):
 
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
                   'routing', 'timeout', 'timestamp', 'ttl', 'version', 'version_type')
-    def bulk(self,  body, index=None, doc_type=None, params=None, headers=None):
+    def bulk(self, body, index=None, doc_type=None, params=None, headers=None):
         version = 1
         items = []
 
@@ -358,7 +369,6 @@ class FakeElasticsearch(Elasticsearch):
                 'found': False
             }
             raise NotFoundError(404, json.dumps(error_data))
-
 
     @query_params('_source', '_source_exclude', '_source_include', 'parent',
                   'preference', 'realtime', 'refresh', 'routing', 'version',
@@ -465,10 +475,11 @@ class FakeElasticsearch(Elasticsearch):
             aggregations = {}
 
             for aggregation, definition in body['aggs'].items():
+                metrics = None
                 aggregations[aggregation] = {
                     "doc_count_error_upper_bound": 0,
                     "sum_other_doc_count": 0,
-                    "buckets": []
+                    "buckets": self.make_aggregation_buckets(definition, matches)
                 }
 
             if aggregations:
@@ -485,9 +496,9 @@ class FakeElasticsearch(Elasticsearch):
                 'params': params
             }
             hits = hits[params.get('from'):params.get('from') + params.get('size')]
-        
+
         result['hits']['hits'] = hits
-        
+
         return result
 
     @query_params('scroll')
@@ -500,7 +511,7 @@ class FakeElasticsearch(Elasticsearch):
             params=scroll.get('params')
         )
         return result
-    
+
     @query_params('consistency', 'parent', 'refresh', 'replication', 'routing',
                   'timeout', 'version', 'version_type')
     def delete(self, index, doc_type, id, params=None, headers=None):
@@ -582,3 +593,41 @@ class FakeElasticsearch(Elasticsearch):
                 cls._find_and_convert_data_types(value)
             elif isinstance(value, datetime.datetime):
                 document[key] = value.isoformat()
+
+    def make_aggregation_buckets(self, aggregation, documents):
+        def make_key(doc_source, agg_source):
+            attr = list(agg_source.values())[0]["terms"]["field"]
+            return doc_source[attr]
+
+        def make_bucket(bucket_key, bucket):
+            out = {
+                "key": AttrDict({k: v for k, v in zip(bucket_key_fields, bucket_key)}),
+                "doc_count": len(bucket),
+            }
+
+            for metric_key, metric_definition in aggregation["aggs"].items():
+                metric_type_str = list(metric_definition)[0]
+                metric_type = MetricType.get_metric_type(metric_type_str)
+                attr = metric_definition[metric_type_str]["field"]
+                data = [doc[attr] for doc in bucket]
+
+                if metric_type == MetricType.CARDINALITY:
+                    value = len(set(data))
+                else:
+                    raise NotImplementedError(f"Metric type '{metric_type}' not implemented")
+
+                print(out, metric_key, value)
+                out[metric_key] = AttrDict({"value": value})
+            return AttrDict(out)
+
+        agg_sources = aggregation["composite"]["sources"]
+        buckets = defaultdict(list)
+        bucket_key_fields = [list(src)[0] for src in agg_sources]
+        for document in documents:
+            doc_src = document["_source"]
+            key = tuple(make_key(doc_src, agg_src) for agg_src in aggregation["composite"]["sources"])
+            buckets[key].append(doc_src)
+
+        buckets = sorted(((k, v) for k, v in buckets.items()), key=lambda x: x[0])
+        buckets = [make_bucket(bucket_key, bucket) for bucket_key, bucket in buckets]
+        return buckets

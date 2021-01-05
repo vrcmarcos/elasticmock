@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import datetime
-import unittest
 
 from elasticsearch.exceptions import NotFoundError
 from parameterized import parameterized
@@ -85,12 +84,13 @@ class TestSearch(TestElasticmock):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
 
-        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 'TEST' } } })
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'match': {'data': 'TEST'}}})
         self.assertEqual(response['hits']['total'], 10)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 10)
 
-        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '3' } } })
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '3'}}})
         self.assertEqual(response['hits']['total'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
@@ -99,17 +99,17 @@ class TestSearch(TestElasticmock):
     def test_search_with_match_query_in_int_list(self):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [i, 11, 13]})
-        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 1 } } })
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 1}}})
         self.assertEqual(response['hits']['total'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
-        self.assertEqual(hits[0]['_source'], {'data': [1, 11, 13] })
+        self.assertEqual(hits[0]['_source'], {'data': [1, 11, 13]})
 
     def test_search_with_match_query_in_string_list(self):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [str(i), 'two', 'three']})
 
-        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '1' } } })
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '1'}}})
         self.assertEqual(response['hits']['total'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
@@ -119,12 +119,13 @@ class TestSearch(TestElasticmock):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
 
-        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'term': {'data': 'TEST' } } })
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'term': {'data': 'TEST'}}})
         self.assertEqual(response['hits']['total'], 0)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 0)
 
-        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'term': {'data': '3' } } })
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'term': {'data': '3'}}})
         self.assertEqual(response['hits']['total'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
@@ -134,7 +135,8 @@ class TestSearch(TestElasticmock):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'id': i})
 
-        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'bool': {'filter': [{'term': {'id': 1}}]}}})
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'bool': {'filter': [{'term': {'id': 1}}]}}})
         self.assertEqual(response['hits']['total'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
@@ -143,7 +145,8 @@ class TestSearch(TestElasticmock):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'id': i})
 
-        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'terms': {'id': [1, 2, 3]}}})
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'terms': {'id': [1, 2, 3]}}})
         self.assertEqual(response['hits']['total'], 3)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 3)
@@ -163,59 +166,59 @@ class TestSearch(TestElasticmock):
     @parameterized.expand(
         [
             (
-                'timestamp gt',
-                {'timestamp': {'gt': datetime.datetime(2009, 1, 1, 10, 20, 0).isoformat()}},
-                range(5, 12),
+                    'timestamp gt',
+                    {'timestamp': {'gt': datetime.datetime(2009, 1, 1, 10, 20, 0).isoformat()}},
+                    range(5, 12),
             ),
             (
-                'timestamp gte',
-                {'timestamp': {'gte': datetime.datetime(2009, 1, 1, 10, 20, 0).isoformat()}},
-                range(4, 12),
+                    'timestamp gte',
+                    {'timestamp': {'gte': datetime.datetime(2009, 1, 1, 10, 20, 0).isoformat()}},
+                    range(4, 12),
             ),
             (
-                'timestamp lt',
-                {'timestamp': {'lt': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat()}},
-                range(7),
+                    'timestamp lt',
+                    {'timestamp': {'lt': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat()}},
+                    range(7),
             ),
             (
-                'timestamp lte',
-                {'timestamp': {'lte': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat()}},
-                range(8),
+                    'timestamp lte',
+                    {'timestamp': {'lte': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat()}},
+                    range(8),
             ),
             (
-                'timestamp combination',
-                {
-                    'timestamp': {
-                        'gt': datetime.datetime(2009, 1, 1, 10, 15, 0).isoformat(),
-                        'lte': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat(),
-                    }
-                },
-                range(4, 8),
+                    'timestamp combination',
+                    {
+                        'timestamp': {
+                            'gt': datetime.datetime(2009, 1, 1, 10, 15, 0).isoformat(),
+                            'lte': datetime.datetime(2009, 1, 1, 10, 35, 0).isoformat(),
+                        }
+                    },
+                    range(4, 8),
             ),
             (
-                'data_int gt',
-                {'data_int': {'gt': 40}},
-                range(5, 12),
+                    'data_int gt',
+                    {'data_int': {'gt': 40}},
+                    range(5, 12),
             ),
             (
-                'data_int gte',
-                {'data_int': {'gte': 40}},
-                range(4, 12),
+                    'data_int gte',
+                    {'data_int': {'gte': 40}},
+                    range(4, 12),
             ),
             (
-                'data_int lt',
-                {'data_int': {'lt': 70}},
-                range(7),
+                    'data_int lt',
+                    {'data_int': {'lt': 70}},
+                    range(7),
             ),
             (
-                'data_int lte',
-                {'data_int': {'lte': 70}},
-                range(8),
+                    'data_int lte',
+                    {'data_int': {'lte': 70}},
+                    range(8),
             ),
             (
-                'data_int combination',
-                {'data_int': {'gt': 30, 'lte': 70}},
-                range(4, 8),
+                    'data_int combination',
+                    {'data_int': {'gt': 30, 'lte': 70}},
+                    range(4, 8),
             ),
         ]
     )
@@ -237,3 +240,44 @@ class TestSearch(TestElasticmock):
         self.assertEqual(len(expected_ids), response['hits']['total'])
         hits = response['hits']['hits']
         self.assertEqual(set(expected_ids), set(hit['_source']['id'] for hit in hits))
+
+    def test_bucket_aggregation(self):
+        data = [
+            {"data_x": 1, "data_y": "a"},
+            {"data_x": 1, "data_y": "a"},
+            {"data_x": 2, "data_y": "a"},
+            {"data_x": 2, "data_y": "b"},
+            {"data_x": 3, "data_y": "b"},
+        ]
+        for body in data:
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body=body)
+
+        response = self.es.search(
+            index="index_for_search",
+            doc_type=DOC_TYPE,
+            body={
+                "query": {"match_all": {}},
+                "aggs": {
+                    "stats": {
+                        "composite": {
+                            "sources": [{"data_x": {"terms": {"field": "data_x"}}}],
+                            "size": 10000,
+                        },
+                        "aggs": {
+                            "distinct_data_y": {"cardinality": {"field": "data_y"}}
+                        },
+                    }
+                },
+            },
+        )
+
+        expected = [
+            {"key": {"data_x": 1}, "doc_count": 2},
+            {"key": {"data_x": 2}, "doc_count": 2},
+            {"key": {"data_x": 3}, "doc_count": 1},
+        ]
+        actual = response["aggregations"]["stats"]["buckets"]
+
+        for x, y in zip(expected, actual):
+            self.assertDictEqual(x["key"], y["key"].to_dict())
+            self.assertEqual(x["doc_count"], y["doc_count"])
