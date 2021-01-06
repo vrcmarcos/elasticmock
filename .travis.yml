@@ -7,7 +7,6 @@ python:
 install:
   - pip install tox-travis
   - pip install coveralls
-  - pip install -r requirements_test.txt
 script:
   tox
 after_success:
