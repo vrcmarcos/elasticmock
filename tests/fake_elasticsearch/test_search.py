@@ -279,5 +279,5 @@ class TestSearch(TestElasticmock):
         actual = response["aggregations"]["stats"]["buckets"]
 
         for x, y in zip(expected, actual):
-            self.assertDictEqual(x["key"], y["key"].to_dict())
+            self.assertDictEqual(x["key"], y["key"])
             self.assertEqual(x["doc_count"], y["doc_count"])

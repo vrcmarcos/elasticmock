@@ -7,7 +7,6 @@ from collections import defaultdict
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
-from elasticsearch_dsl import AttrDict
 
 from elasticmock.behaviour.server_failure import server_failure
 from elasticmock.fake_cluster import FakeClusterClient
@@ -606,7 +605,7 @@ class FakeElasticsearch(Elasticsearch):
 
         def make_bucket(bucket_key, bucket):
             out = {
-                "key": AttrDict({k: v for k, v in zip(bucket_key_fields, bucket_key)}),
+                "key": {k: v for k, v in zip(bucket_key_fields, bucket_key)},
                 "doc_count": len(bucket),
             }
 
@@ -621,8 +620,8 @@ class FakeElasticsearch(Elasticsearch):
                 else:
                     raise NotImplementedError(f"Metric type '{metric_type}' not implemented")
 
-                out[metric_key] = AttrDict({"value": value})
-            return AttrDict(out)
+                out[metric_key] = {"value": value}
+            return out
 
         agg_sources = aggregation["composite"]["sources"]
         buckets = defaultdict(list)
