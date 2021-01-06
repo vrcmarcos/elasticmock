@@ -4,6 +4,7 @@ import json
 import sys
 from collections import defaultdict
 
+import dateutil.parser
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
 from elasticsearch.exceptions import NotFoundError
@@ -134,13 +135,7 @@ class FakeQueryCondition:
 
             for sign, value in comparisons.items():
                 if isinstance(doc_val, datetime.datetime):
-                    value = datetime.datetime.fromisoformat(value)
-                # we can also use this:
-                # try:
-                #     if not getattr(doc_val, f"__{sign}__")(value):
-                #         return False
-                # except AttributeError:
-                #     raise ValueError(f"Invalid comparison type {sign}") from None
+                    value = dateutil.parser.isoparse(value)
                 if sign == 'gte':
                     if doc_val < value:
                         return False
