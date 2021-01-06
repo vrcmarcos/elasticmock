@@ -430,8 +430,6 @@ class FakeElasticsearch(Elasticsearch):
         for searchable_index in searchable_indexes:
 
             for document in self.__documents_dict[searchable_index]:
-                if len(matches) >= int(params.get('size', 10_000)):
-                    break
 
                 if doc_type:
                     if isinstance(doc_type, list) and document.get('_type') not in doc_type:
@@ -475,7 +473,6 @@ class FakeElasticsearch(Elasticsearch):
             aggregations = {}
 
             for aggregation, definition in body['aggs'].items():
-                metrics = None
                 aggregations[aggregation] = {
                     "doc_count_error_upper_bound": 0,
                     "sum_other_doc_count": 0,
@@ -487,7 +484,7 @@ class FakeElasticsearch(Elasticsearch):
 
         if 'scroll' in params:
             result['_scroll_id'] = str(get_random_scroll_id())
-            params['size'] = int(params.get('size') if 'size' in params else 10)
+            params['size'] = int(params.get('size', 10))
             params['from'] = int(params.get('from') + params.get('size') if 'from' in params else 0)
             self.__scrolls[result.get('_scroll_id')] = {
                 'index': index,
@@ -496,6 +493,8 @@ class FakeElasticsearch(Elasticsearch):
                 'params': params
             }
             hits = hits[params.get('from'):params.get('from') + params.get('size')]
+        elif 'size' in params:
+            hits = hits[:int(params['size'])]
 
         result['hits']['hits'] = hits
 
@@ -595,6 +594,12 @@ class FakeElasticsearch(Elasticsearch):
                 document[key] = value.isoformat()
 
     def make_aggregation_buckets(self, aggregation, documents):
+        if 'composite' in aggregation:
+            return self.make_composite_aggregation_buckets(aggregation, documents)
+        return []
+
+    def make_composite_aggregation_buckets(self, aggregation, documents):
+
         def make_key(doc_source, agg_source):
             attr = list(agg_source.values())[0]["terms"]["field"]
             return doc_source[attr]
@@ -616,7 +621,6 @@ class FakeElasticsearch(Elasticsearch):
                 else:
                     raise NotImplementedError(f"Metric type '{metric_type}' not implemented")
 
-                print(out, metric_key, value)
                 out[metric_key] = AttrDict({"value": value})
             return AttrDict(out)
 
