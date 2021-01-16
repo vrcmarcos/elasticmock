@@ -29,6 +29,8 @@ class QueryType:
     TERMS = 'TERMS'
     MUST = 'MUST'
     RANGE = 'RANGE'
+    SHOULD = 'SHOULD'
+    MINIMUM_SHOULD_MATCH = 'MINIMUM_SHOULD_MATCH'
 
     @staticmethod
     def get_query_type(type_str):
@@ -48,6 +50,10 @@ class QueryType:
             return QueryType.MUST
         elif type_str == 'range':
             return QueryType.RANGE
+        elif type_str == 'should':
+            return QueryType.SHOULD
+        elif type_str == 'minimum_should_match':
+            return QueryType.MINIMUM_SHOULD_MATCH
         else:
             raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
 
