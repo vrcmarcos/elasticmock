@@ -177,6 +177,13 @@ python setup.py test
 
 ## Changelog
 
+#### 1.7.0:
+- [Add shards skipped to search and count](https://github.com/vrcmarcos/elasticmock/pull/56) (Thanks [@philtweir](https://github.com/philtweir))
+- [Allow 'match_all' queries in FakeSearch](https://github.com/vrcmarcos/elasticmock/pull/54) (Thanks [@jankislinger](https://github.com/jankislinger))
+- [Query using nested attributes](https://github.com/vrcmarcos/elasticmock/pull/55) (Thanks [@jankislinger](https://github.com/jankislinger))
+- [New features: range, size, aggregations](https://github.com/vrcmarcos/elasticmock/pull/57) (Thanks [@jankislinger](https://github.com/jankislinger))
+- [Adding "should" and "minimum_should_match" to QueryType](https://github.com/vrcmarcos/elasticmock/pull/62) (Thanks [@lunarie16](https://github.com/lunarie16))
+
 #### 1.6.2:
 - [Add must to query type](https://github.com/vrcmarcos/elasticmock/pull/47) (Thanks [@cuent](https://github.com/cuent))
 - [Add match all query type](https://github.com/vrcmarcos/elasticmock/pull/48) (Thanks [@cuent](https://github.com/cuent))
