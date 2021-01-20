@@ -163,6 +163,32 @@ class TestSearch(TestElasticmock):
             doc = response['hits']['hits'][0]['_source']
             self.assertEqual(i, doc['id'])
 
+
+    def test_search_with_bool_query_and_multi_match(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={
+                'data': 'test_{0}'.format(i) if i % 2 == 0 else None,
+                'data2': 'test_{0}'.format(i) if (i+1) % 2 == 0 else None
+                })
+
+        search_body = {
+            "query": {
+                "bool": {
+                    "must": {
+                        "multi_match": {
+                            "query": "test",
+                            "fields": ["data", "data2"]
+                        }
+                    }
+                }
+            }
+        }
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body=search_body)
+        self.assertEqual(response['hits']['total'], 10)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 10)
+
     @parameterized.expand(
         [
             (

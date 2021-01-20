@@ -31,6 +31,7 @@ class QueryType:
     RANGE = 'RANGE'
     SHOULD = 'SHOULD'
     MINIMUM_SHOULD_MATCH = 'MINIMUM_SHOULD_MATCH'
+    MULTI_MATCH = 'MULTI_MATCH'
 
     @staticmethod
     def get_query_type(type_str):
@@ -54,6 +55,8 @@ class QueryType:
             return QueryType.SHOULD
         elif type_str == 'minimum_should_match':
             return QueryType.MINIMUM_SHOULD_MATCH
+        elif type_str == 'multi_match':
+            return QueryType.MULTI_MATCH
         else:
             raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
 
@@ -95,6 +98,10 @@ class FakeQueryCondition:
             return self._evaluate_for_compound_query_type(document)
         elif self.type == QueryType.FILTER:
             return self._evaluate_for_compound_query_type(document)
+        elif self.type == QueryType.MUST:
+            return self._evaluate_for_compound_query_type(document)
+        elif self.type == QueryType.MULTI_MATCH:
+            return self._evaluate_for_multi_match_query_type(document)
         else:
             raise NotImplementedError('Fake query evaluation not implemented for query type: %s' % self.type)
 
@@ -123,6 +130,25 @@ class FakeQueryCondition:
             )
             if return_val:
                 break
+        return return_val
+
+    def _evaluate_for_fields(self, document):
+        doc_source = document['_source']
+        return_val = False
+        value = self.condition.get('query')
+        if not value:
+            return return_val
+        fields = self.condition.get('fields', [])
+        for field in fields:
+            return_val = self._compare_value_for_field(
+                doc_source,
+                field,
+                value,
+                True
+            )
+            if return_val:
+                break
+
         return return_val
 
     def _evaluate_for_range_query_type(self, document):
@@ -179,6 +205,9 @@ class FakeQueryCondition:
                         return False
 
         return return_val
+
+    def _evaluate_for_multi_match_query_type(self, document):
+        return self._evaluate_for_fields(document)
 
     def _compare_value_for_field(self, doc_source, field, value, ignore_case):
         if ignore_case and isinstance(value, str):
