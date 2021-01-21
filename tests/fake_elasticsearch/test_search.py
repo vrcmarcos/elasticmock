@@ -163,6 +163,71 @@ class TestSearch(TestElasticmock):
             doc = response['hits']['hits'][0]['_source']
             self.assertEqual(i, doc['id'])
 
+
+    def test_search_with_bool_query_and_multi_match(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={
+                'data': 'test_{0}'.format(i) if i % 2 == 0 else None,
+                'data2': 'test_{0}'.format(i) if (i+1) % 2 == 0 else None
+                })
+
+        search_body = {
+            "query": {
+                "bool": {
+                    "must": {
+                        "multi_match": {
+                            "query": "test",
+                            "fields": ["data", "data2"]
+                        }
+                    }
+                }
+            }
+        }
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body=search_body)
+        self.assertEqual(response['hits']['total'], 10)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 10)
+
+    def test_msearch(self):
+        for i in range(0, 10):
+            self.es.index(index='index_for_search1', doc_type=DOC_TYPE, body={
+                'data': 'test_{0}'.format(i) if i % 2 == 0 else None,
+                'data2': 'test_{0}'.format(i) if (i+1) % 2 == 0 else None
+                })
+        for i in range(0, 10):
+            self.es.index(index='index_for_search2', doc_type=DOC_TYPE, body={
+                'data': 'test_{0}'.format(i) if i % 2 == 0 else None,
+                'data2': 'test_{0}'.format(i) if (i+1) % 2 == 0 else None
+                })
+
+        search_body = {
+            "query": {
+                "bool": {
+                    "must": {
+                        "multi_match": {
+                            "query": "test",
+                            "fields": ["data", "data2"]
+                        }
+                    }
+                }
+            }
+        }
+        body = []
+        body.append({'index': 'index_for_search1'})
+        body.append(search_body)
+        body.append({'index': 'index_for_search2'})
+        body.append(search_body)
+
+        result = self.es.msearch(index='index_for_search', body=body)
+        response1, response2 = result['responses']
+        self.assertEqual(response1['hits']['total'], 10)
+        hits1 = response1['hits']['hits']
+        self.assertEqual(len(hits1), 10)
+        self.assertEqual(response2['hits']['total'], 10)
+        hits2 = response2['hits']['hits']
+        self.assertEqual(len(hits2), 10)
+
     @parameterized.expand(
         [
             (
