@@ -438,6 +438,38 @@ class FakeElasticsearch(Elasticsearch):
     def _get_fake_query_condition(self, query_type_str, condition):
         return FakeQueryCondition(QueryType.get_query_type(query_type_str), condition)
 
+    @query_params(
+        "ccs_minimize_roundtrips",
+        "max_concurrent_searches",
+        "max_concurrent_shard_requests",
+        "pre_filter_shard_size",
+        "rest_total_hits_as_int",
+        "search_type",
+        "typed_keys",
+    )
+    def msearch(self, body, index=None, doc_type=None, params=None, headers=None):
+        def grouped(iterable):
+            if len(iterable) % 2 != 0:
+                raise Exception('Malformed body')
+            iterator = iter(iterable)
+            while True:
+                try:
+                    yield (next(iterator)['index'], next(iterator))
+                except StopIteration:
+                    break
+
+        responses = []
+        took = 0
+        for ind, query in grouped(body):
+            response = self.search(index=ind, body=query)
+            took += response['took']
+            responses.append(response)
+        result = {
+            'took': took,
+            'responses': responses
+        }
+        return result
+
     @query_params('_source', '_source_exclude', '_source_include',
                   'allow_no_indices', 'analyze_wildcard', 'analyzer', 'default_operator',
                   'df', 'expand_wildcards', 'explain', 'fielddata_fields', 'fields',
