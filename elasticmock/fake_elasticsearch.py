@@ -6,7 +6,8 @@ from collections import defaultdict
 
 import dateutil.parser
 from elasticsearch import Elasticsearch
-from elasticsearch.client.utils import query_params, _normalize_hosts
+from elasticsearch.client.utils import query_params
+from elasticsearch.client import _normalize_hosts
 from elasticsearch.transport import Transport
 from elasticsearch.exceptions import NotFoundError, RequestError
 
