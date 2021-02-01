@@ -6,8 +6,9 @@ from collections import defaultdict
 
 import dateutil.parser
 from elasticsearch import Elasticsearch
-from elasticsearch.client.utils import query_params
-from elasticsearch.exceptions import NotFoundError
+from elasticsearch.client.utils import query_params, _normalize_hosts
+from elasticsearch.transport import Transport
+from elasticsearch.exceptions import NotFoundError, RequestError
 
 from elasticmock.behaviour.server_failure import server_failure
 from elasticmock.fake_cluster import FakeClusterClient
@@ -246,6 +247,7 @@ class FakeElasticsearch(Elasticsearch):
     def __init__(self, hosts=None, transport_class=None, **kwargs):
         self.__documents_dict = {}
         self.__scrolls = {}
+        self.transport = Transport(_normalize_hosts(hosts), **kwargs)
 
     @property
     def indices(self):
@@ -295,10 +297,10 @@ class FakeElasticsearch(Elasticsearch):
 
         if id is None:
             id = get_random_id()
-        elif self.exists(index, doc_type, id, params=params):
-            doc = self.get(index, id, doc_type, params=params)
+        elif self.exists(index, id, doc_type=doc_type, params=params):
+            doc = self.get(index, id, doc_type=doc_type, params=params)
             version = doc['_version'] + 1
-            self.delete(index, doc_type, id)
+            self.delete(index, id, doc_type=doc_type)
 
         self.__documents_dict[index].append({
             '_type': doc_type,
@@ -322,26 +324,23 @@ class FakeElasticsearch(Elasticsearch):
         version = 1
         items = []
 
+        ids = []
         for line in body.splitlines():
             if len(line.strip()) > 0:
                 line = json.loads(line)
 
                 if 'index' in line:
-                    index = line['index']['_index']
-                    doc_type = line['index']['_type']
+                    index = line['index'].get('_index') or index
+                    doc_type = line['index'].get('_type') \
+                        or doc_type or '_all'
 
                     if index not in self.__documents_dict:
                         self.__documents_dict[index] = list()
+                    ids.append(line['index'].get('_id'))
                 else:
-                    document_id = get_random_id()
+                    document_id = ids.pop() if ids else None
 
-                    self.__documents_dict[index].append({
-                        '_type': doc_type,
-                        '_id': document_id,
-                        '_source': line,
-                        '_index': index,
-                        '_version': version
-                    })
+                    self.index(index, line, doc_type=doc_type, id=document_id)
 
                     items.append({'index': {
                         '_type': doc_type,
@@ -358,7 +357,7 @@ class FakeElasticsearch(Elasticsearch):
         }
 
     @query_params('parent', 'preference', 'realtime', 'refresh', 'routing')
-    def exists(self, index, doc_type, id, params=None, headers=None):
+    def exists(self, index, id, doc_type=None, params=None, headers=None):
         result = False
         if index in self.__documents_dict:
             for document in self.__documents_dict[index]:
@@ -398,6 +397,26 @@ class FakeElasticsearch(Elasticsearch):
                 'found': False
             }
             raise NotFoundError(404, json.dumps(error_data))
+
+    @query_params('_source', '_source_exclude', '_source_include',
+                  'preference', 'realtime', 'refresh', 'routing',
+                  'stored_fields')
+    def mget(self, body, index, doc_type='_all', params=None, headers=None):
+        ids = body.get('ids')
+        results = []
+        for id in ids:
+            try:
+                results.append(self.get(index, id, doc_type=doc_type,
+                    params=params, headers=headers))
+            except:
+                pass
+        if not results:
+            raise RequestError(
+                400,
+                'action_request_validation_exception',
+                'Validation Failed: 1: no documents to get;'
+            )
+        return {'docs': results}
 
     @query_params('_source', '_source_exclude', '_source_include', 'parent',
                   'preference', 'realtime', 'refresh', 'routing', 'version',
@@ -574,17 +593,20 @@ class FakeElasticsearch(Elasticsearch):
 
     @query_params('consistency', 'parent', 'refresh', 'replication', 'routing',
                   'timeout', 'version', 'version_type')
-    def delete(self, index, doc_type, id, params=None, headers=None):
+    def delete(self, index, id, doc_type=None, params=None, headers=None):
 
         found = False
         ignore = extract_ignore_as_iterable(params)
 
         if index in self.__documents_dict:
             for document in self.__documents_dict[index]:
-                if document.get('_type') == doc_type and document.get('_id') == id:
+                if document.get('_id') == id:
                     found = True
-                    self.__documents_dict[index].remove(document)
-                    break
+                    if doc_type and document.get('_type') != doc_type:
+                        found = False
+                    if found:
+                        self.__documents_dict[index].remove(document)
+                        break
 
         result_dict = {
             'found': found,
