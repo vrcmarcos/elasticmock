@@ -7,7 +7,7 @@ from collections import defaultdict
 import dateutil.parser
 from elasticsearch import Elasticsearch
 from elasticsearch.client.utils import query_params
-from elasticsearch.exceptions import NotFoundError
+from elasticsearch.exceptions import NotFoundError, RequestError
 
 from elasticmock.behaviour.server_failure import server_failure
 from elasticmock.fake_cluster import FakeClusterClient
@@ -321,41 +321,72 @@ class FakeElasticsearch(Elasticsearch):
     def bulk(self, body, index=None, doc_type=None, params=None, headers=None):
         version = 1
         items = []
+        errors = False
 
-        for line in body.splitlines():
-            if len(line.strip()) > 0:
-                line = json.loads(line)
+        for raw_line in body.splitlines():
+            if len(raw_line.strip()) > 0:
+                line = json.loads(raw_line)
 
-                if 'index' in line:
-                    index = line['index']['_index']
-                    doc_type = line['index']['_type']
+                if any(action in line for action in ['index', 'create', 'update']):
+                    action = next(iter(line.keys()))
+
+                    index = line[action]['_index']
+                    doc_type = line[action].get('_type', "_doc")  # _type is deprecated in 7.x
+
+                    if action == 'updated' and not line[action].get("_id"):
+                        raise RequestError(400, 'action_request_validation_exception', 'missing id')
+
+                    document_id = line[action].get('_id', get_random_id())
 
                     if index not in self.__documents_dict:
                         self.__documents_dict[index] = list()
                 else:
-                    document_id = get_random_id()
+                    if 'doc' in line and action == 'update':
+                        source = line['doc']
+                    else:
+                        source = line
+                    status, result, error = self._validate_action(action, index, document_id, doc_type)
+                    item = {
+                        action: {
+                            '_type': doc_type,
+                            '_id': document_id,
+                            '_index': index,
+                            '_version': version,
+                            'status': status,
+                        }
+                    }
 
-                    self.__documents_dict[index].append({
-                        '_type': doc_type,
-                        '_id': document_id,
-                        '_source': line,
-                        '_index': index,
-                        '_version': version
-                    })
+                    if not error:
+                        item[action]["result"] = result
+                        self.__documents_dict[index].append({
+                            '_type': doc_type,
+                            '_id': document_id,
+                            '_source': source,
+                            '_index': index,
+                            '_version': version
+                        })
+                    else:
+                        errors = True
+                        item[action]["error"] = result
 
-                    items.append({'index': {
-                        '_type': doc_type,
-                        '_id': document_id,
-                        '_index': index,
-                        '_version': version,
-                        'result': 'created',
-                        'status': 201
-                    }})
+                    items.append(item)
 
         return {
-            'errors': False,
+            'errors': errors,
             'items': items
         }
+
+    def _validate_action(self, action, index, document_id, doc_type):
+        if action in ['index', 'update'] and self.exists(index, id=document_id, doc_type=doc_type):
+            return 200, 'updated', False
+        if action == 'created' and self.exists(index, id=document_id, doc_type=doc_type):
+            return 409, 'version_conflict_engine_exception', True
+        elif action in ['index', 'create'] and not self.exists(index, id=document_id, doc_type=doc_type):
+            return 201, 'created', False
+        elif action == 'update' and not self.exists(index, id=document_id, doc_type=doc_type):
+            return 404, 'document_missing_exception', True
+        else:
+            raise NotImplementedError(f"{action} behaviour hasn't been implemented")
 
     @query_params('parent', 'preference', 'realtime', 'refresh', 'routing')
     def exists(self, index, doc_type, id, params=None, headers=None):
