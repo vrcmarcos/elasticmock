@@ -327,16 +327,27 @@ class FakeElasticsearch(Elasticsearch):
             if len(raw_line.strip()) > 0:
                 line = json.loads(raw_line)
 
-                if any(action in line for action in ['index', 'create', 'update']):
+                if any(action in line for action in ['index', 'create', 'update', 'delete']):
                     action = next(iter(line.keys()))
 
                     index = line[action]['_index']
                     doc_type = line[action].get('_type', "_doc")  # _type is deprecated in 7.x
 
-                    if action == 'updated' and not line[action].get("_id"):
+                    if action in ['delete', 'updated'] and not line[action].get("_id"):
                         raise RequestError(400, 'action_request_validation_exception', 'missing id')
 
                     document_id = line[action].get('_id', get_random_id())
+
+                    if action == 'delete' and self.exists(index, id=document_id, doc_type=doc_type):
+                        self.delete(index, doc_type=doc_type, id=document_id)
+                        items.append({action: {
+                            '_type': doc_type,
+                            '_id': document_id,
+                            '_index': index,
+                            '_version': version,
+                            'result': 'deleted',
+                            'status': 200,
+                        }})
 
                     if index not in self.__documents_dict:
                         self.__documents_dict[index] = list()
@@ -356,7 +367,7 @@ class FakeElasticsearch(Elasticsearch):
                         }
                     }
 
-                    if not error:
+                    if not error and action != 'delete':
                         item[action]["result"] = result
                         self.__documents_dict[index].append({
                             '_type': doc_type,
@@ -368,9 +379,7 @@ class FakeElasticsearch(Elasticsearch):
                     else:
                         errors = True
                         item[action]["error"] = result
-
                     items.append(item)
-
         return {
             'errors': errors,
             'items': items
@@ -379,12 +388,16 @@ class FakeElasticsearch(Elasticsearch):
     def _validate_action(self, action, index, document_id, doc_type):
         if action in ['index', 'update'] and self.exists(index, id=document_id, doc_type=doc_type):
             return 200, 'updated', False
-        if action == 'created' and self.exists(index, id=document_id, doc_type=doc_type):
+        if action == 'create' and self.exists(index, id=document_id, doc_type=doc_type):
             return 409, 'version_conflict_engine_exception', True
         elif action in ['index', 'create'] and not self.exists(index, id=document_id, doc_type=doc_type):
             return 201, 'created', False
+        elif action == "delete" and self.exists(index, id=document_id, doc_type=doc_type):
+            return 200, 'deleted', False
         elif action == 'update' and not self.exists(index, id=document_id, doc_type=doc_type):
             return 404, 'document_missing_exception', True
+        elif action == 'delete' and not self.exists(index, id=document_id, doc_type=doc_type):
+            return 404, 'not_found', True
         else:
             raise NotImplementedError(f"{action} behaviour hasn't been implemented")
 
@@ -610,6 +623,7 @@ class FakeElasticsearch(Elasticsearch):
         found = False
         ignore = extract_ignore_as_iterable(params)
 
+        print(self.__documents_dict['test_index'])
         if index in self.__documents_dict:
             for document in self.__documents_dict[index]:
                 if document.get('_type') == doc_type and document.get('_id') == id:
@@ -617,6 +631,9 @@ class FakeElasticsearch(Elasticsearch):
                     self.__documents_dict[index].remove(document)
                     break
 
+        print("WTF")
+        print(found)
+        print(self.__documents_dict[index])
         result_dict = {
             'found': found,
             '_index': index,
