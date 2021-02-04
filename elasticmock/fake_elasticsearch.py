@@ -100,6 +100,8 @@ class FakeQueryCondition:
             return self._evaluate_for_compound_query_type(document)
         elif self.type == QueryType.MUST:
             return self._evaluate_for_compound_query_type(document)
+        elif self.type == QueryType.SHOULD:
+            return self._evaluate_for_should_query_type(document)
         elif self.type == QueryType.MULTI_MATCH:
             return self._evaluate_for_multi_match_query_type(document)
         else:
@@ -204,6 +206,18 @@ class FakeQueryCondition:
                     if not return_val:
                         return False
 
+        return return_val
+
+    def _evaluate_for_should_query_type(self, document):
+        return_val = False
+        for sub_condition in self.condition:
+            for sub_condition_key in sub_condition:
+                return_val = FakeQueryCondition(
+                    QueryType.get_query_type(sub_condition_key),
+                    sub_condition[sub_condition_key]
+                ).evaluate(document)
+                if return_val:
+                    return True
         return return_val
 
     def _evaluate_for_multi_match_query_type(self, document):
