@@ -113,7 +113,6 @@ class TestBulk(TestElasticmock):
         items = data.get('items')
 
         self.assertFalse(data.get('errors'))
-        print(items)
         self.assertEqual(num_of_documents + 1, len(items))
 
         first_item = items.pop(0)
@@ -126,6 +125,38 @@ class TestBulk(TestElasticmock):
             self.assertEqual(INDEX_NAME, index.get('_index'))
             self.assertEqual('updated', index.get('result'))
             self.assertEqual(200, index.get('status'))
+
+    def test_should_bulk_index_documents_delete_deletes(self):
+        delete_action = {'delete': {'_index': INDEX_NAME, '_id': DOC_ID, '_type': DOC_TYPE}}
+        delete_action_json = json.dumps(delete_action)
+        create_action_json = json.dumps(
+            {'create': {'_index': INDEX_NAME, '_id': DOC_ID, '_type': DOC_TYPE}}
+        )
+
+        lines = [
+            create_action_json,
+            json.dumps(BODY, default=str),
+            delete_action_json,
+        ]
+        body = '\n'.join(lines)
+
+        data = self.es.bulk(body=body)
+        items = data.get('items')
+
+        self.assertFalse(data.get('errors'))
+        self.assertEqual(2, len(items))
+
+        first_item = items.pop(0)
+        self.assertEqual(first_item["create"]["status"], 201)
+        self.assertEqual(first_item["create"]["result"], "created")
+        self.assertEqual(first_item["create"]['_type'], DOC_TYPE)
+        self.assertEqual(first_item["create"]['_id'], DOC_ID)
+
+        second_item = items.pop(0)
+        self.assertEqual(second_item["delete"]["status"], 200)
+        self.assertEqual(second_item["delete"]["result"], "deleted")
+        self.assertEqual(second_item["delete"]['_type'], DOC_TYPE)
+        self.assertEqual(second_item["delete"]['_id'], DOC_ID)
 
     def test_should_bulk_index_documents_mixed_actions(self):
         doc_body = json.dumps(BODY, default=str)
@@ -144,27 +175,37 @@ class TestBulk(TestElasticmock):
             json.dumps({'update': {'_index': INDEX_NAME, '_type': DOC_TYPE, '_id': doc_id_1}}),
             doc_body,  # 200
             json.dumps({'delete': {'_index': INDEX_NAME, '_type': DOC_TYPE, '_id': doc_id_1}}),
+            # 200
             json.dumps({'update': {'_index': INDEX_NAME, '_type': DOC_TYPE, '_id': doc_id_1}}),
-            doc_body,
+            doc_body,  # 404
             json.dumps({'delete': {'_index': INDEX_NAME, '_type': DOC_TYPE, '_id': doc_id_1}}),
+            # 404
         ]
         body = '\n'.join(actions)
 
         data = self.es.bulk(body=body)
 
         expected = [
-            {'create': {'_type': 'doc-Type', '_id': 1, '_index': 'test_index', '_version': 1, 'status': 201, 'result': 'created'}},
-            {'create': {'_type': 'doc-Type', '_id': 1, '_index': 'test_index', '_version': 1, 'status': 409, 'error': 'version_conflict_engine_exception'}},
-            {'index': {'_type': 'doc-Type', '_id': 2, '_index': 'test_index', '_version': 1, 'status': 201, 'result': 'created'}},
-            {'index': {'_type': 'doc-Type', '_id': 2, '_index': 'test_index', '_version': 1, 'status': 200, 'result': 'updated'}},
-            {'update': {'_type': 'doc-Type', '_id': 1, '_index': 'test_index', '_version': 1, 'status': 200, 'result': 'updated'}},
-            {'delete': {'_type': 'doc-Type', '_id': 1, '_index': 'test_index', '_version': 1, 'result': 'deleted', 'status': 200}},
-            {'update': {'_type': 'doc-Type', '_id': 1, '_index': 'test_index', '_version': 1, 'status': 200, 'result': 'updated'}},
-            {'delete': {'_type': 'doc-Type', '_id': 1, '_index': 'test_index', '_version': 1, 'result': 'deleted', 'status': 200}},
+            {'create': {'_type': DOC_TYPE, '_id': 1, '_index': INDEX_NAME,
+                        '_version': 1, 'status': 201, 'result': 'created'}},
+            {'create': {'_type': DOC_TYPE, '_id': 1, '_index': INDEX_NAME,
+                        '_version': 1, 'status': 409,
+                        'error': 'version_conflict_engine_exception'}},
+            {'index': {'_type': DOC_TYPE, '_id': 2, '_index': INDEX_NAME,
+                       '_version': 1, 'status': 201, 'result': 'created'}},
+            {'index': {'_type': DOC_TYPE, '_id': 2, '_index': INDEX_NAME,
+                       '_version': 1, 'status': 200, 'result': 'updated'}},
+            {'update': {'_type': DOC_TYPE, '_id': 1, '_index': INDEX_NAME,
+                        '_version': 1, 'status': 200, 'result': 'updated'}},
+            {'delete': {'_type': DOC_TYPE, '_id': 1, '_index': INDEX_NAME,
+                        '_version': 1, 'result': 'deleted', 'status': 200}},
+            {'update': {'_type': DOC_TYPE, '_id': 1, '_index': INDEX_NAME,
+                        '_version': 1, 'status': 404, 'error': 'document_missing_exception'}},
+            {'delete': {'_type': DOC_TYPE, '_id': 1, '_index': INDEX_NAME,
+                        '_version': 1, 'error': 'not_found', 'status': 404}},
             ]
 
-        items = data.get('items')
+        actual = data.get('items')
 
-        for item in items:
-            print(item)
-            pass
+        self.assertTrue(data.get('errors'))
+        self.assertEqual(actual, expected)

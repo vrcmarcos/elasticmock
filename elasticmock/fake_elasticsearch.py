@@ -319,7 +319,6 @@ class FakeElasticsearch(Elasticsearch):
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
                   'routing', 'timeout', 'timestamp', 'ttl', 'version', 'version_type')
     def bulk(self, body, index=None, doc_type=None, params=None, headers=None):
-        version = 1
         items = []
         errors = False
 
@@ -330,6 +329,7 @@ class FakeElasticsearch(Elasticsearch):
                 if any(action in line for action in ['index', 'create', 'update', 'delete']):
                     action = next(iter(line.keys()))
 
+                    version = 1
                     index = line[action]['_index']
                     doc_type = line[action].get('_type', "_doc")  # _type is deprecated in 7.x
 
@@ -338,16 +338,24 @@ class FakeElasticsearch(Elasticsearch):
 
                     document_id = line[action].get('_id', get_random_id())
 
-                    if action == 'delete' and self.exists(index, id=document_id, doc_type=doc_type):
-                        self.delete(index, doc_type=doc_type, id=document_id)
-                        items.append({action: {
+                    if action == 'delete':
+                        status, result, error = self._validate_action(
+                            action, index, document_id, doc_type, params=params
+                        )
+                        item = {action: {
                             '_type': doc_type,
                             '_id': document_id,
                             '_index': index,
                             '_version': version,
-                            'result': 'deleted',
-                            'status': 200,
-                        }})
+                            'status': status,
+                        }}
+                        if error:
+                            errors = True
+                            item[action]["error"] = result
+                        else:
+                            self.delete(index, doc_type, document_id, params=params)
+                            item[action]["result"] = result
+                        items.append(item)
 
                     if index not in self.__documents_dict:
                         self.__documents_dict[index] = list()
@@ -356,7 +364,9 @@ class FakeElasticsearch(Elasticsearch):
                         source = line['doc']
                     else:
                         source = line
-                    status, result, error = self._validate_action(action, index, document_id, doc_type)
+                    status, result, error = self._validate_action(
+                        action, index, document_id, doc_type, params=params
+                    )
                     item = {
                         action: {
                             '_type': doc_type,
@@ -366,9 +376,13 @@ class FakeElasticsearch(Elasticsearch):
                             'status': status,
                         }
                     }
-
-                    if not error and action != 'delete':
+                    if not error:
                         item[action]["result"] = result
+                        if self.exists(index, doc_type, document_id, params=params):
+                            doc = self.get(index, document_id, doc_type, params=params)
+                            version = doc['_version'] + 1
+                            self.delete(index, doc_type, document_id, params=params)
+
                         self.__documents_dict[index].append({
                             '_type': doc_type,
                             '_id': document_id,
@@ -385,18 +399,18 @@ class FakeElasticsearch(Elasticsearch):
             'items': items
         }
 
-    def _validate_action(self, action, index, document_id, doc_type):
-        if action in ['index', 'update'] and self.exists(index, id=document_id, doc_type=doc_type):
+    def _validate_action(self, action, index, document_id, doc_type, params=None):
+        if action in ['index', 'update'] and self.exists(index, id=document_id, doc_type=doc_type, params=params):
             return 200, 'updated', False
-        if action == 'create' and self.exists(index, id=document_id, doc_type=doc_type):
+        if action == 'create' and self.exists(index, id=document_id, doc_type=doc_type, params=params):
             return 409, 'version_conflict_engine_exception', True
-        elif action in ['index', 'create'] and not self.exists(index, id=document_id, doc_type=doc_type):
+        elif action in ['index', 'create'] and not self.exists(index, id=document_id, doc_type=doc_type, params=params):
             return 201, 'created', False
-        elif action == "delete" and self.exists(index, id=document_id, doc_type=doc_type):
+        elif action == "delete" and self.exists(index, id=document_id, doc_type=doc_type, params=params):
             return 200, 'deleted', False
-        elif action == 'update' and not self.exists(index, id=document_id, doc_type=doc_type):
+        elif action == 'update' and not self.exists(index, id=document_id, doc_type=doc_type, params=params):
             return 404, 'document_missing_exception', True
-        elif action == 'delete' and not self.exists(index, id=document_id, doc_type=doc_type):
+        elif action == 'delete' and not self.exists(index, id=document_id, doc_type=doc_type, params=params):
             return 404, 'not_found', True
         else:
             raise NotImplementedError(f"{action} behaviour hasn't been implemented")
@@ -623,7 +637,6 @@ class FakeElasticsearch(Elasticsearch):
         found = False
         ignore = extract_ignore_as_iterable(params)
 
-        print(self.__documents_dict['test_index'])
         if index in self.__documents_dict:
             for document in self.__documents_dict[index]:
                 if document.get('_type') == doc_type and document.get('_id') == id:
@@ -631,9 +644,6 @@ class FakeElasticsearch(Elasticsearch):
                     self.__documents_dict[index].remove(document)
                     break
 
-        print("WTF")
-        print(found)
-        print(self.__documents_dict[index])
         result_dict = {
             'found': found,
             '_index': index,
@@ -641,13 +651,12 @@ class FakeElasticsearch(Elasticsearch):
             '_id': id,
             '_version': 1,
         }
-
         if found:
             return result_dict
         elif params and 404 in ignore:
             return {'found': False}
         else:
-            raise NotFoundError(404, json.dumps(result_dict))
+            raise NotFoundError(404, json.dumps(result_dict, default=str))
 
     @query_params('allow_no_indices', 'expand_wildcards', 'ignore_unavailable',
                   'preference', 'routing')
