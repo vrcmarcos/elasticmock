@@ -510,7 +510,7 @@ class FakeElasticsearch(Elasticsearch):
 
         result = {
             'hits': {
-                'total': len(matches),
+                'total': {'value': len(matches), 'relation': 'eq'},
                 'max_score': 1.0
             },
             '_shards': {

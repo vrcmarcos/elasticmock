@@ -35,10 +35,10 @@ class TestIndex(TestElasticmock):
                 self.es.index(index=INDEX_NAME, doc_type=doc_type, body={})
 
         result = self.es.search(doc_type=[doc_types[0]])
-        self.assertEqual(count_per_doc_type, result.get('hits').get('total'))
+        self.assertEqual(count_per_doc_type, result.get('hits').get('total').get('value'))
 
         result = self.es.search(doc_type=doc_types[:2])
-        self.assertEqual(count_per_doc_type * 2, result.get('hits').get('total'))
+        self.assertEqual(count_per_doc_type * 2, result.get('hits').get('total').get('value'))
 
     def test_update_existing_doc(self):
         data = self.es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=BODY)
