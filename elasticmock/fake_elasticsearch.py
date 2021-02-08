@@ -216,6 +216,8 @@ class FakeQueryCondition:
             value = value.lower()
 
         doc_val = doc_source
+        # Remove boosting
+        field, *_ = field.split("*")
         for k in field.split("."):
             if hasattr(doc_val, k):
                 doc_val = getattr(doc_val, k)
