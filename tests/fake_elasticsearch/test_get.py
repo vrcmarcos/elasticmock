@@ -60,3 +60,11 @@ class TestGet(TestElasticmock):
         target_doc_source = self.es.get_source(index=INDEX_NAME, doc_type=DOC_TYPE, id=document_id)
 
         self.assertEqual(target_doc_source, BODY)
+
+    def test_mget_get_several_documents_by_id(self):
+        ids = []
+        for _ in range(0, 10):
+            data = self.es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=BODY)
+            ids.append(data.get('_id'))
+        results = self.es.mget(index=INDEX_NAME, body={'ids': ids})
+        self.assertEqual(len(results['docs']), 10)

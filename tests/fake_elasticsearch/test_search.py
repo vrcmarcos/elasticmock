@@ -205,7 +205,7 @@ class TestSearch(TestElasticmock):
                                           }
                                       }
                                   })
-        self.assertEqual(response['hits']['total'], 3)
+        self.assertEqual(response['hits']['total']['value'], 3)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 3)
         self.assertEqual(hits[0]['_source'], {'data': 'test_0'})
