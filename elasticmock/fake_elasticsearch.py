@@ -352,7 +352,7 @@ class FakeElasticsearch(Elasticsearch):
                     action = next(iter(line.keys()))
 
                     version = 1
-                    index = line[action]['_index']
+                    index = line[action].get('_index') or index
                     doc_type = line[action].get('_type', "_doc")  # _type is deprecated in 7.x
 
                     if action in ['delete', 'update'] and not line[action].get("_id"):
