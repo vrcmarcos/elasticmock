@@ -14,7 +14,8 @@ from elasticsearch.exceptions import NotFoundError, RequestError
 from elasticmock.behaviour.server_failure import server_failure
 from elasticmock.fake_cluster import FakeClusterClient
 from elasticmock.fake_indices import FakeIndicesClient
-from elasticmock.utilities import extract_ignore_as_iterable, get_random_id, get_random_scroll_id
+from elasticmock.utilities import (extract_ignore_as_iterable, get_random_id,
+    get_random_scroll_id)
 from elasticmock.utilities.decorator import for_all_methods
 
 PY3 = sys.version_info[0] == 3
@@ -102,6 +103,8 @@ class FakeQueryCondition:
             return self._evaluate_for_compound_query_type(document)
         elif self.type == QueryType.MUST:
             return self._evaluate_for_compound_query_type(document)
+        elif self.type == QueryType.SHOULD:
+            return self._evaluate_for_should_query_type(document)
         elif self.type == QueryType.MULTI_MATCH:
             return self._evaluate_for_multi_match_query_type(document)
         else:
@@ -206,6 +209,18 @@ class FakeQueryCondition:
                     if not return_val:
                         return False
 
+        return return_val
+
+    def _evaluate_for_should_query_type(self, document):
+        return_val = False
+        for sub_condition in self.condition:
+            for sub_condition_key in sub_condition:
+                return_val = FakeQueryCondition(
+                    QueryType.get_query_type(sub_condition_key),
+                    sub_condition[sub_condition_key]
+                ).evaluate(document)
+                if return_val:
+                    return True
         return return_val
 
     def _evaluate_for_multi_match_query_type(self, document):
@@ -326,40 +341,101 @@ class FakeElasticsearch(Elasticsearch):
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
                   'routing', 'timeout', 'timestamp', 'ttl', 'version', 'version_type')
     def bulk(self, body, index=None, doc_type=None, params=None, headers=None):
-        version = 1
         items = []
+        errors = False
 
-        ids = []
-        for line in body.splitlines():
-            if len(line.strip()) > 0:
-                line = json.loads(line)
+        for raw_line in body.splitlines():
+            if len(raw_line.strip()) > 0:
+                line = json.loads(raw_line)
 
-                if 'index' in line:
-                    index = line['index'].get('_index') or index
-                    doc_type = line['index'].get('_type') \
-                        or doc_type or '_all'
+                if any(action in line for action in ['index', 'create', 'update', 'delete']):
+                    action = next(iter(line.keys()))
+
+                    version = 1
+                    index = line[action]['_index']
+                    doc_type = line[action].get('_type', "_doc")  # _type is deprecated in 7.x
+
+                    if action in ['delete', 'update'] and not line[action].get("_id"):
+                        raise RequestError(400, 'action_request_validation_exception', 'missing id')
+
+                    document_id = line[action].get('_id', get_random_id())
+
+                    if action == 'delete':
+                        status, result, error = self._validate_action(
+                            action, index, document_id, doc_type, params=params
+                        )
+                        item = {action: {
+                            '_type': doc_type,
+                            '_id': document_id,
+                            '_index': index,
+                            '_version': version,
+                            'status': status,
+                        }}
+                        if error:
+                            errors = True
+                            item[action]["error"] = result
+                        else:
+                            self.delete(index, document_id, doc_type=doc_type, params=params)
+                            item[action]["result"] = result
+                        items.append(item)
 
                     if index not in self.__documents_dict:
                         self.__documents_dict[index] = list()
-                    ids.append(line['index'].get('_id'))
                 else:
-                    document_id = ids.pop() if ids else None
+                    if 'doc' in line and action == 'update':
+                        source = line['doc']
+                    else:
+                        source = line
+                    status, result, error = self._validate_action(
+                        action, index, document_id, doc_type, params=params
+                    )
+                    item = {
+                        action: {
+                            '_type': doc_type,
+                            '_id': document_id,
+                            '_index': index,
+                            '_version': version,
+                            'status': status,
+                        }
+                    }
+                    if not error:
+                        item[action]["result"] = result
+                        if self.exists(index, document_id, doc_type=doc_type, params=params):
+                            doc = self.get(index, document_id, doc_type=doc_type, params=params)
+                            version = doc['_version'] + 1
+                            self.delete(index, document_id, doc_type=doc_type, params=params)
 
-                    self.index(index, line, doc_type=doc_type, id=document_id)
-
-                    items.append({'index': {
-                        '_type': doc_type,
-                        '_id': document_id,
-                        '_index': index,
-                        '_version': version,
-                        'result': 'created',
-                        'status': 201
-                    }})
-
+                        self.__documents_dict[index].append({
+                            '_type': doc_type,
+                            '_id': document_id,
+                            '_source': source,
+                            '_index': index,
+                            '_version': version
+                        })
+                    else:
+                        errors = True
+                        item[action]["error"] = result
+                    items.append(item)
         return {
-            'errors': False,
+            'errors': errors,
             'items': items
         }
+
+    def _validate_action(self, action, index, document_id, doc_type, params=None):
+        if action in ['index', 'update'] and self.exists(index, id=document_id, doc_type=doc_type, params=params):
+            return 200, 'updated', False
+        if action == 'create' and self.exists(index, id=document_id, doc_type=doc_type, params=params):
+            return 409, 'version_conflict_engine_exception', True
+        elif action in ['index', 'create'] and not self.exists(index, id=document_id, doc_type=doc_type, params=params):
+            return 201, 'created', False
+        elif action == "delete" and self.exists(index, id=document_id, doc_type=doc_type, params=params):
+            return 200, 'deleted', False
+        elif action == 'update' and not self.exists(index, id=document_id, doc_type=doc_type, params=params):
+            return 404, 'document_missing_exception', True
+        elif action == 'delete' and not self.exists(index, id=document_id, doc_type=doc_type, params=params):
+            return 404, 'not_found', True
+        else:
+            raise NotImplementedError(f"{action} behaviour hasn't been implemented")
 
     @query_params('parent', 'preference', 'realtime', 'refresh', 'routing')
     def exists(self, index, id, doc_type=None, params=None, headers=None):
@@ -534,7 +610,7 @@ class FakeElasticsearch(Elasticsearch):
 
         result = {
             'hits': {
-                'total': len(matches),
+                'total': {'value': len(matches), 'relation': 'eq'},
                 'max_score': 1.0
             },
             '_shards': {
