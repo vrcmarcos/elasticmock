@@ -9,6 +9,7 @@ from elasticmock import elasticmock
 
 INDEX_NAME = 'test_index'
 DOC_TYPE = 'doc-Type'
+DOC_ID = 'doc-id'
 BODY = {
     'author': 'kimchy',
     'text': 'Elasticsearch: cool. bonsai cool.',
