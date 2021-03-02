@@ -15,7 +15,7 @@ class TestSearch(TestElasticmock):
 
     def test_should_return_hits_hits_even_when_no_result(self):
         search = self.es.search()
-        self.assertEqual(0, search.get('hits').get('total'))
+        self.assertEqual(0, search.get('hits').get('total').get('value'))
         self.assertListEqual([], search.get('hits').get('hits'))
 
     def test_should_return_skipped_shards(self):
@@ -28,7 +28,7 @@ class TestSearch(TestElasticmock):
             self.es.index(index='index_{0}'.format(i), doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
 
         search = self.es.search()
-        self.assertEqual(index_quantity, search.get('hits').get('total'))
+        self.assertEqual(index_quantity, search.get('hits').get('total').get('value'))
 
     def test_should_return_all_documents_match_all(self):
         index_quantity = 10
@@ -36,7 +36,7 @@ class TestSearch(TestElasticmock):
             self.es.index(index='index_{0}'.format(i), doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
 
         search = self.es.search(body={'query': {'match_all': {}}})
-        self.assertEqual(index_quantity, search.get('hits').get('total'))
+        self.assertEqual(index_quantity, search.get('hits').get('total').get('value'))
 
     def test_should_return_only_indexed_documents_on_index(self):
         index_quantity = 2
@@ -44,7 +44,7 @@ class TestSearch(TestElasticmock):
             self.es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body={'data': 'test_{0}'.format(i)})
 
         search = self.es.search(index=INDEX_NAME)
-        self.assertEqual(index_quantity, search.get('hits').get('total'))
+        self.assertEqual(index_quantity, search.get('hits').get('total').get('value'))
 
     def test_should_return_only_indexed_documents_on_index_with_doc_type(self):
         index_quantity = 2
@@ -53,7 +53,7 @@ class TestSearch(TestElasticmock):
         self.es.index(index=INDEX_NAME, doc_type='another-Doctype', body={'data': 'test'})
 
         search = self.es.search(index=INDEX_NAME, doc_type=DOC_TYPE)
-        self.assertEqual(index_quantity, search.get('hits').get('total'))
+        self.assertEqual(index_quantity, search.get('hits').get('total').get('value'))
 
     def test_should_search_in_multiple_indexes(self):
         self.es.index(index='groups', doc_type='groups', body={'budget': 1000})
@@ -61,7 +61,7 @@ class TestSearch(TestElasticmock):
         self.es.index(index='pcs', doc_type='pcs', body={'model': 'macbook'})
 
         result = self.es.search(index=['users', 'pcs'])
-        self.assertEqual(2, result.get('hits').get('total'))
+        self.assertEqual(2, result.get('hits').get('total').get('value'))
 
     def test_usage_of_aggregations(self):
         self.es.index(index='index', doc_type='document', body={'genre': 'rock'})
@@ -78,7 +78,7 @@ class TestSearch(TestElasticmock):
         result = self.es.search(index='groups', params={'scroll': '1m', 'size': 30})
         self.assertNotEqual(None, result.get('_scroll_id', None))
         self.assertEqual(30, len(result.get('hits').get('hits')))
-        self.assertEqual(100, result.get('hits').get('total'))
+        self.assertEqual(100, result.get('hits').get('total').get('value'))
 
     def test_search_with_match_query(self):
         for i in range(0, 10):
@@ -86,12 +86,12 @@ class TestSearch(TestElasticmock):
 
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
                                   body={'query': {'match': {'data': 'TEST'}}})
-        self.assertEqual(response['hits']['total'], 10)
+        self.assertEqual(response['hits']['total']['value'], 10)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 10)
 
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '3'}}})
-        self.assertEqual(response['hits']['total'], 1)
+        self.assertEqual(response['hits']['total']['value'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]['_source'], {'data': 'test_3'})
@@ -100,7 +100,7 @@ class TestSearch(TestElasticmock):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [i, 11, 13]})
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': 1}}})
-        self.assertEqual(response['hits']['total'], 1)
+        self.assertEqual(response['hits']['total']['value'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]['_source'], {'data': [1, 11, 13]})
@@ -110,7 +110,7 @@ class TestSearch(TestElasticmock):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [str(i), 'two', 'three']})
 
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'match': {'data': '1'}}})
-        self.assertEqual(response['hits']['total'], 1)
+        self.assertEqual(response['hits']['total']['value'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]['_source'], {'data': ['1', 'two', 'three']})
@@ -121,12 +121,12 @@ class TestSearch(TestElasticmock):
 
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
                                   body={'query': {'term': {'data': 'TEST'}}})
-        self.assertEqual(response['hits']['total'], 0)
+        self.assertEqual(response['hits']['total']['value'], 0)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 0)
 
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE, body={'query': {'term': {'data': '3'}}})
-        self.assertEqual(response['hits']['total'], 1)
+        self.assertEqual(response['hits']['total']['value'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]['_source'], {'data': 'test_3'})
@@ -137,7 +137,7 @@ class TestSearch(TestElasticmock):
 
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
                                   body={'query': {'bool': {'filter': [{'term': {'id': 1}}]}}})
-        self.assertEqual(response['hits']['total'], 1)
+        self.assertEqual(response['hits']['total']['value'], 1)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 1)
 
@@ -147,7 +147,7 @@ class TestSearch(TestElasticmock):
 
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
                                   body={'query': {'terms': {'id': [1, 2, 3]}}})
-        self.assertEqual(response['hits']['total'], 3)
+        self.assertEqual(response['hits']['total']['value'], 3)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 3)
 
@@ -159,7 +159,7 @@ class TestSearch(TestElasticmock):
         for term, value, i in [('data.x', 1, 1), ('data.y', 'yes', 0)]:
             response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
                                       body={'query': {'term': {term: value}}})
-            self.assertEqual(1, response['hits']['total'])
+            self.assertEqual(1, response['hits']['total']['value'])
             doc = response['hits']['hits'][0]['_source']
             self.assertEqual(i, doc['id'])
 
@@ -185,7 +185,7 @@ class TestSearch(TestElasticmock):
         }
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
                                   body=search_body)
-        self.assertEqual(response['hits']['total'], 10)
+        self.assertEqual(response['hits']['total']['value'], 10)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 10)
 
@@ -242,10 +242,10 @@ class TestSearch(TestElasticmock):
 
         result = self.es.msearch(index='index_for_search', body=body)
         response1, response2 = result['responses']
-        self.assertEqual(response1['hits']['total'], 10)
+        self.assertEqual(response1['hits']['total']['value'], 10)
         hits1 = response1['hits']['hits']
         self.assertEqual(len(hits1), 10)
-        self.assertEqual(response2['hits']['total'], 10)
+        self.assertEqual(response2['hits']['total']['value'], 10)
         hits2 = response2['hits']['hits']
         self.assertEqual(len(hits2), 10)
 
@@ -323,7 +323,7 @@ class TestSearch(TestElasticmock):
             body={'query': {'range': query_range}},
         )
 
-        self.assertEqual(len(expected_ids), response['hits']['total'])
+        self.assertEqual(len(expected_ids), response['hits']['total']['value'])
         hits = response['hits']['hits']
         self.assertEqual(set(expected_ids), set(hit['_source']['id'] for hit in hits))
 

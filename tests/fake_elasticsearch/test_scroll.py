@@ -24,4 +24,4 @@ class TestScroll(TestElasticmock):
 
         self.assertNotEqual(None, result.get('_scroll_id', None))
         self.assertEqual(expected_scroll_hits, len(hits.get('hits')))
-        self.assertEqual(100, hits.get('total'))
+        self.assertEqual(100, hits.get('total').get('value'))
