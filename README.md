@@ -177,6 +177,13 @@ python setup.py test
 
 ## Changelog
 
+#### 1.8.0:
+- [Add multi_match](https://github.com/vrcmarcos/elasticmock/pull/63) (Thanks [@carlosgalvez-tiendeo](https://github.com/carlosgalvez-tiendeo))
+- [Add mget](https://github.com/vrcmarcos/elasticmock/pull/64) (Thanks [@carlosgalvez-tiendeo](https://github.com/carlosgalvez-tiendeo))
+- [Add create, update, and delete to bulk API](https://github.com/vrcmarcos/elasticmock/pull/65) (Thanks [@fenimore](https://github.com/fenimore))
+- [Add Should to bool Query](https://github.com/vrcmarcos/elasticmock/pull/67) (Thanks [@fenimore](https://github.com/fenimore))
+- [Update Search API return result](https://github.com/vrcmarcos/elasticmock/pull/68) (Thanks [@fenimore](https://github.com/fenimore))
+
 #### 1.7.0:
 - [Add shards skipped to search and count](https://github.com/vrcmarcos/elasticmock/pull/56) (Thanks [@philtweir](https://github.com/philtweir))
 - [Allow 'match_all' queries in FakeSearch](https://github.com/vrcmarcos/elasticmock/pull/54) (Thanks [@jankislinger](https://github.com/jankislinger))
