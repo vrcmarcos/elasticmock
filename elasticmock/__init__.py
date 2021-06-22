@@ -3,7 +3,7 @@
 from functools import wraps
 
 from elasticsearch.client import _normalize_hosts
-from mock import patch
+from unittest.mock import patch
 
 from elasticmock.fake_elasticsearch import FakeElasticsearch
 
