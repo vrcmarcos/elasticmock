@@ -2,41 +2,42 @@
 
 import setuptools
 
-__version__ = '1.8.0'
+__version__ = "1.8.0"
 
 # read the contents of your readme file
 from os import path
+
 this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'README.md'), 'rb') as f:
-    long_description = f.read().decode('utf-8')
+with open(path.join(this_directory, "README.md"), "rb") as f:
+    long_description = f.read().decode("utf-8")
 
 setuptools.setup(
-    name='ElasticMock',
+    name="ElasticMock",
     version=__version__,
-    author='Marcos Cardoso',
-    author_email='vrcmarcos@gmail.com',
-    description='Python Elasticsearch Mock for test purposes',
+    author="Marcos Cardoso",
+    author_email="vrcmarcos@gmail.com",
+    description="Python Elasticsearch Mock for test purposes",
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/vrcmarcos/elasticmock',
-    packages=setuptools.find_packages(exclude=('tests')),
+    long_description_content_type="text/markdown",
+    url="https://github.com/vrcmarcos/elasticmock",
+    packages=setuptools.find_packages(exclude=("tests")),
     install_requires=[
-        'elasticsearch',
-        'python-dateutil',
-        'six',
+        "elasticsearch",
+        "python-dateutil",
+        "six",
     ],
     classifiers=[
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        "Environment :: Web Environment",
+        "Intended Audience :: Developers",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
-        'Topic :: Software Development :: Libraries :: Python Modules'
-    ]
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
 )

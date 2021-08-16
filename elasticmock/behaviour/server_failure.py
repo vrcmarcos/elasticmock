@@ -19,11 +19,9 @@ def server_failure(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if __ENABLED:
-            response = {
-                'status_code': 500,
-                'error': 'Internal Server Error'
-            }
+            response = {"status_code": 500, "error": "Internal Server Error"}
         else:
             response = f(*args, **kwargs)
         return response
+
     return decorated

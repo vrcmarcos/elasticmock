@@ -4,6 +4,7 @@ from functools import wraps
 
 from elasticsearch.client import _normalize_hosts
 from six import PY3
+
 if PY3:
     from unittest.mock import patch
 else:
@@ -16,8 +17,8 @@ ELASTIC_INSTANCES = {}
 
 def _get_elasticmock(hosts=None, *args, **kwargs):
     host = _normalize_hosts(hosts)[0]
-    elastic_key = '{0}:{1}'.format(
-        host.get('host', 'localhost'), host.get('port', 9200)
+    elastic_key = "{0}:{1}".format(
+        host.get("host", "localhost"), host.get("port", 9200)
     )
 
     if elastic_key in ELASTIC_INSTANCES:
@@ -32,7 +33,8 @@ def elasticmock(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         ELASTIC_INSTANCES.clear()
-        with patch('elasticsearch.Elasticsearch', _get_elasticmock):
+        with patch("elasticsearch.Elasticsearch", _get_elasticmock):
             result = f(*args, **kwargs)
         return result
+
     return decorated
