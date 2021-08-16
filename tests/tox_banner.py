@@ -10,6 +10,6 @@ print(
     "{} {}; ElasticSearch {}".format(
         platform.python_implementation(),
         platform.python_version(),
-        elasticsearch.VERSION
+        elasticsearch.VERSION,
     )
 )
