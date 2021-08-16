@@ -1,3 +1,5 @@
 elasticsearch>=1.9.0,<8.0.0
 ipdb
 python-dateutil
+mock>=2.0.0,<3.0.0
+six

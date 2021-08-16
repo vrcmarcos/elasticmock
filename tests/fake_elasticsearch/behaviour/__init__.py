@@ -5,6 +5,5 @@ from tests import TestElasticmock
 
 
 class TestElasticmockBehaviour(TestElasticmock):
-
     def tearDown(self):
         behaviour.disable_all()

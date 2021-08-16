@@ -1,2 +1,5 @@
 tox
 parameterized
+pytest
+flake8
+black
