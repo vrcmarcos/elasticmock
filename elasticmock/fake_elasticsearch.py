@@ -567,7 +567,7 @@ class FakeElasticsearch(Elasticsearch):
                         index, id, doc_type=doc_type, params=params, headers=headers
                     )
                 )
-            except:
+            except Exception:
                 pass
         if not results:
             raise RequestError(
