@@ -23,6 +23,7 @@ setuptools.setup(
     install_requires=[
         'elasticsearch',
         'python-dateutil',
+        'six',
     ],
     classifiers=[
         'Environment :: Web Environment',

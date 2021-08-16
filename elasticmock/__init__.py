@@ -3,7 +3,11 @@
 from functools import wraps
 
 from elasticsearch.client import _normalize_hosts
-from unittest.mock import patch
+from six import PY3
+if PY3:
+    from unittest.mock import patch
+else:
+    from mock import patch
 
 from elasticmock.fake_elasticsearch import FakeElasticsearch
 

@@ -17,10 +17,7 @@ from elasticmock.fake_indices import FakeIndicesClient
 from elasticmock.utilities import (extract_ignore_as_iterable, get_random_id,
     get_random_scroll_id)
 from elasticmock.utilities.decorator import for_all_methods
-
-PY3 = sys.version_info[0] == 3
-if PY3:
-    unicode = str
+from six import string_types
 
 
 class QueryType:
@@ -64,7 +61,7 @@ class QueryType:
         elif type_str == 'must_not':
             return QueryType.MUST_NOT
         else:
-            raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
+            raise NotImplementedError('type {} is not implemented for QueryType'.format(type_str))
 
 
 class MetricType:
@@ -75,7 +72,7 @@ class MetricType:
         if type_str == "cardinality":
             return MetricType.CARDINALITY
         else:
-            raise NotImplementedError(f'type {type_str} is not implemented for MetricType')
+            raise NotImplementedError('type {} is not implemented for MetricType'.format(type_str))
 
 
 class FakeQueryCondition:
@@ -191,7 +188,7 @@ class FakeQueryCondition:
                     if doc_val >= value:
                         return False
                 else:
-                    raise ValueError(f"Invalid comparison type {sign}")
+                    raise ValueError("Invalid comparison type {}".format(sign))
             return True
 
     def _evaluate_for_compound_query_type(self, document):
@@ -257,7 +254,7 @@ class FakeQueryCondition:
 
         doc_val = doc_source
         # Remove boosting
-        field, *_ = field.split("*")
+        field = field.split("*")[0]
         for k in field.split("."):
             if hasattr(doc_val, k):
                 doc_val = getattr(doc_val, k)
@@ -460,7 +457,7 @@ class FakeElasticsearch(Elasticsearch):
         elif action == 'delete' and not self.exists(index, id=document_id, doc_type=doc_type, params=params):
             return 404, 'not_found', True
         else:
-            raise NotImplementedError(f"{action} behaviour hasn't been implemented")
+            raise NotImplementedError("{} behaviour hasn't been implemented".format(action))
 
     @query_params('parent', 'preference', 'realtime', 'refresh', 'routing')
     def exists(self, index, id, doc_type=None, params=None, headers=None):
@@ -759,7 +756,7 @@ class FakeElasticsearch(Elasticsearch):
         # Ensure to have a list of index
         if index is None:
             searchable_indexes = self.__documents_dict.keys()
-        elif isinstance(index, str) or isinstance(index, unicode):
+        elif isinstance(index, str) or isinstance(index, string_types):
             searchable_indexes = [index]
         elif isinstance(index, list):
             searchable_indexes = index
@@ -808,7 +805,7 @@ class FakeElasticsearch(Elasticsearch):
                 if metric_type == MetricType.CARDINALITY:
                     value = len(set(data))
                 else:
-                    raise NotImplementedError(f"Metric type '{metric_type}' not implemented")
+                    raise NotImplementedError("Metric type '{}' not implemented".format(metric_type))
 
                 out[metric_key] = {"value": value}
             return out
