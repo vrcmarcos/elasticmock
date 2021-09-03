@@ -5,17 +5,15 @@ import sys
 from collections import defaultdict
 
 import dateutil.parser
-from elasticsearch import Elasticsearch
+
 from elasticsearch.client.utils import query_params
-from elasticsearch.client import _normalize_hosts
 from elasticsearch.transport import Transport
 from elasticsearch.exceptions import NotFoundError, RequestError
 
 from elasticmock.behaviour.server_failure import server_failure
 from elasticmock.fake_cluster import FakeClusterClient
 from elasticmock.fake_indices import FakeIndicesClient
-from elasticmock.utilities import (extract_ignore_as_iterable, get_random_id,
-    get_random_scroll_id)
+from elasticmock.utilities import (extract_ignore_as_iterable, get_random_id, get_random_scroll_id)
 from elasticmock.utilities.decorator import for_all_methods
 
 PY3 = sys.version_info[0] == 3
@@ -286,13 +284,13 @@ class FakeQueryCondition:
 
 
 @for_all_methods([server_failure])
-class FakeElasticsearch(Elasticsearch):
+class FakeElasticsearch():
     __documents_dict = None
 
-    def __init__(self, hosts=None, transport_class=None, **kwargs):
+    def __init__(self, hosts=None, **kwargs):
         self.__documents_dict = {}
         self.__scrolls = {}
-        self.transport = Transport(_normalize_hosts(hosts), **kwargs)
+        self.transport = Transport(hosts, **kwargs)
 
     @property
     def indices(self):
@@ -604,7 +602,10 @@ class FakeElasticsearch(Elasticsearch):
                   'suggest_size', 'suggest_text', 'terminate_after', 'timeout',
                   'track_scores', 'version')
     def search(self, index=None, doc_type=None, body=None, params=None, headers=None):
-        searchable_indexes = self._normalize_index_to_list(index)
+        if params and params.get('ignore_unavailable'):
+            searchable_indexes = self._normalize_index_to_list(index, True)
+        else:
+            searchable_indexes = self._normalize_index_to_list(index)
 
         matches = []
         conditions = []
@@ -614,21 +615,20 @@ class FakeElasticsearch(Elasticsearch):
             for query_type_str, condition in query.items():
                 conditions.append(self._get_fake_query_condition(query_type_str, condition))
         for searchable_index in searchable_indexes:
-
-            for document in self.__documents_dict[searchable_index]:
-
-                if doc_type:
-                    if isinstance(doc_type, list) and document.get('_type') not in doc_type:
-                        continue
-                    if isinstance(doc_type, str) and document.get('_type') != doc_type:
-                        continue
-                if conditions:
-                    for condition in conditions:
-                        if condition.evaluate(document):
-                            matches.append(document)
-                            break
-                else:
-                    matches.append(document)
+            if self.__documents_dict and self.__documents_dict.get(searchable_index):
+                for document in self.__documents_dict[searchable_index]:
+                    if doc_type:
+                        if isinstance(doc_type, list) and document.get('_type') not in doc_type:
+                            continue
+                        if isinstance(doc_type, str) and document.get('_type') != doc_type:
+                            continue
+                    if conditions:
+                        for condition in conditions:
+                            if condition.evaluate(document):
+                                matches.append(document)
+                                break
+                    else:
+                        matches.append(document)
 
         for match in matches:
             self._find_and_convert_data_types(match['_source'])
@@ -755,7 +755,7 @@ class FakeElasticsearch(Elasticsearch):
             ]
         return result_dict
 
-    def _normalize_index_to_list(self, index):
+    def _normalize_index_to_list(self, index, ignore_unavailable: bool = False):
         # Ensure to have a list of index
         if index is None:
             searchable_indexes = self.__documents_dict.keys()
@@ -769,7 +769,7 @@ class FakeElasticsearch(Elasticsearch):
 
         # Check index(es) exists
         for searchable_index in searchable_indexes:
-            if searchable_index not in self.__documents_dict:
+            if searchable_index not in self.__documents_dict and not ignore_unavailable:
                 raise NotFoundError(404, 'IndexMissingException[[{0}] missing]'.format(searchable_index))
 
         return searchable_indexes
