@@ -2,7 +2,7 @@
 
 import setuptools
 
-__version__ = '1.8.0'
+__version__ = '1.8.1'
 
 # read the contents of your readme file
 from os import path
@@ -18,7 +18,7 @@ setuptools.setup(
     description='Python Elasticsearch Mock for test purposes',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/vrcmarcos/elasticmock',
+    url='https://github.com/monte-carlo-data/elasticmock',
     packages=setuptools.find_packages(exclude=('tests')),
     install_requires=[
         'elasticsearch',
