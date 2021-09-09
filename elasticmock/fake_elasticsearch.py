@@ -803,18 +803,19 @@ class FakeElasticsearch():
                 "doc_count": len(bucket),
             }
 
-            for metric_key, metric_definition in aggregation["aggs"].items():
-                metric_type_str = list(metric_definition)[0]
-                metric_type = MetricType.get_metric_type(metric_type_str)
-                attr = metric_definition[metric_type_str]["field"]
-                data = [doc[attr] for doc in bucket]
+            if aggregation.get("aggs"):
+                for metric_key, metric_definition in aggregation["aggs"].items():
+                    metric_type_str = list(metric_definition)[0]
+                    metric_type = MetricType.get_metric_type(metric_type_str)
+                    attr = metric_definition[metric_type_str]["field"]
+                    data = [doc[attr] for doc in bucket]
 
-                if metric_type == MetricType.CARDINALITY:
-                    value = len(set(data))
-                else:
-                    raise NotImplementedError(f"Metric type '{metric_type}' not implemented")
+                    if metric_type == MetricType.CARDINALITY:
+                        value = len(set(data))
+                    else:
+                        raise NotImplementedError(f"Metric type '{metric_type}' not implemented")
 
-                out[metric_key] = {"value": value}
+                    out[metric_key] = {"value": value}
             return out
 
         agg_sources = aggregation["composite"]["sources"]
