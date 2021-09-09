@@ -790,7 +790,11 @@ class FakeElasticsearch():
     def make_composite_aggregation_buckets(self, aggregation, documents):
 
         def make_key(doc_source, agg_source):
-            attr = list(agg_source.values())[0]["terms"]["field"]
+            agg_lst = list(agg_source.values())[0]
+            if agg_lst.get("terms"):
+                attr = agg_lst["terms"]["field"]
+            elif agg_lst.get("date_histogram"):
+                attr = agg_lst["date_histogram"]["field"]
             return doc_source[attr]
 
         def make_bucket(bucket_key, bucket):

@@ -339,7 +339,7 @@ class TestSearch(TestElasticmock):
         hits = response['hits']['hits']
         self.assertEqual(set(expected_ids), set(hit['_source']['id'] for hit in hits))
 
-    def test_bucket_aggregation(self):
+    def test_bucket_aggregation_terms(self):
         data = [
             {"data_x": 1, "data_y": "a"},
             {"data_x": 1, "data_y": "a"},
@@ -376,6 +376,47 @@ class TestSearch(TestElasticmock):
         ]
         actual = response["aggregations"]["stats"]["buckets"]
 
+        for x, y in zip(expected, actual):
+            self.assertDictEqual(x["key"], y["key"])
+            self.assertEqual(x["doc_count"], y["doc_count"])
+
+    def test_bucket_aggregation_date_histogram(self):
+        start_date = datetime.datetime(2021, 12, 1, 15)
+        data = [
+            {"data_x": 1, "data_y": "a", "timestamp": start_date},
+            {"data_x": 1, "data_y": "a", "timestamp": start_date},
+            {"data_x": 1, "data_y": "a", "timestamp": start_date - datetime.timedelta(hours=1)},
+            {"data_x": 1, "data_y": "b", "timestamp": start_date - datetime.timedelta(hours=1)},
+            {"data_x": 1, "data_y": "b", "timestamp": start_date - datetime.timedelta(hours=1)},
+        ]
+        for body in data:
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body=body)
+
+        response = self.es.search(
+            index="index_for_search",
+            doc_type=DOC_TYPE,
+            body={
+                "query": {"match_all": {}},
+                "aggs": {
+                    "stats": {
+                        "composite": {
+                            "sources": [{"histo": {"date_histogram": {"field": "timestamp"}}}],
+                            "size": 10000,
+                        },
+                        "aggs": {
+                            "distinct_data_y": {"cardinality": {"field": "data_y"}}
+                        },
+                    }
+                },
+            },
+        )
+
+        expected = [
+            {"key": {"histo": '2021-12-01T14:00:00'}, "doc_count": 3},
+            {"key": {"histo": '2021-12-01T15:00:00'}, "doc_count": 2},
+        ]
+        actual = response["aggregations"]["stats"]["buckets"]
+        print(actual)
         for x, y in zip(expected, actual):
             self.assertDictEqual(x["key"], y["key"])
             self.assertEqual(x["doc_count"], y["doc_count"])
