@@ -511,7 +511,7 @@ class FakeElasticsearch():
         for id in ids:
             try:
                 results.append(self.get(index, id, doc_type=doc_type,
-                    params=params, headers=headers))
+                                        params=params, headers=headers))
             except:
                 pass
         if not results:
@@ -795,6 +795,7 @@ class FakeElasticsearch():
                 attr = agg_lst["terms"]["field"]
             elif agg_lst.get("date_histogram"):
                 attr = agg_lst["date_histogram"]["field"]
+            attr = attr.split('.')[0]  # support for '.keyword'
             return doc_source[attr]
 
         def make_bucket(bucket_key, bucket):
