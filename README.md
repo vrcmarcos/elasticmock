@@ -177,6 +177,12 @@ python setup.py test
 
 ## Changelog
 
+#### 1.8.1:
+- [Add support for Python 3.9](https://github.com/vrcmarcos/elasticmock/pull/72) (Thanks [@singingwolfboy](https://github.com/singingwolfboy))
+- [use unittest.mock instead of mock](https://github.com/vrcmarcos/elasticmock/pull/71) (Thanks [@singingwolfboy](https://github.com/singingwolfboy))
+- [Add must_not for bool search query](https://github.com/vrcmarcos/elasticmock/pull/70) (Thanks [@t-bittarn](https://github.com/t-bittarn))
+
+
 #### 1.8.0:
 - [Add multi_match](https://github.com/vrcmarcos/elasticmock/pull/63) (Thanks [@carlosgalvez-tiendeo](https://github.com/carlosgalvez-tiendeo))
 - [Add mget](https://github.com/vrcmarcos/elasticmock/pull/64) (Thanks [@carlosgalvez-tiendeo](https://github.com/carlosgalvez-tiendeo))
