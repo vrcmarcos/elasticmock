@@ -76,6 +76,61 @@ class MetricType:
             raise NotImplementedError(f'type {type_str} is not implemented for MetricType')
 
 
+class SortOrder:
+    ASC = "asc"
+    DESC = "desc"
+
+    @staticmethod
+    def get_sort_order(type_str):
+        if type_str == "asc":
+            return SortOrder.ASC
+        elif type_str == "desc":
+            return SortOrder.DESC
+        else:
+            raise NotImplementedError(f'type {type_str} is not implemented for SortOrder')
+
+
+class SortMode:
+    MIN = "min"
+    MAX = "max"
+    SUM = "sum"
+    AVG = "avg"
+    MEDIAN = "median"
+
+    @staticmethod
+    def get_sort_mode(type_str):
+        if type_str == "min":
+            return SortMode.MIN
+        elif type_str == "max":
+            return SortMode.MAX
+        elif type_str == "sum":
+            return SortMode.SUM
+        elif type_str == "avg":
+            return SortMode.AVG
+        elif type_str == "median":
+            return SortMode.MEDIAN
+        else:
+            raise NotImplementedError(f'type {type_str} is not implemented for SortMode')
+
+
+class FakeSortRequest:
+    _order = None
+    _mode = None
+    _field = None
+
+    def __init__(self, order, mode, field):
+        self._order = order
+        self._mode = mode
+        self._field = field
+
+    def sort(self, hits):
+        reverse = True
+        if self._order == SortOrder.ASC:
+            reverse = False
+        return sorted(hits, key=lambda hit: hit['_source'][f'{self._field}'], reverse=reverse)
+
+
+
 class FakeQueryCondition:
     type = None
     condition = None
@@ -561,6 +616,10 @@ class FakeElasticsearch():
     def _get_fake_query_condition(self, query_type_str, condition):
         return FakeQueryCondition(QueryType.get_query_type(query_type_str), condition)
 
+    def _get_fake_sort(self, field, sort_condition):
+        # mode is not supported yet...
+        return FakeSortRequest(SortOrder.get_sort_order(sort_condition['order']), None, field)
+
     @query_params(
         "ccs_minimize_roundtrips",
         "max_concurrent_searches",
@@ -609,11 +668,19 @@ class FakeElasticsearch():
 
         matches = []
         conditions = []
+        sorts = []
 
-        if body and 'query' in body:
-            query = body['query']
-            for query_type_str, condition in query.items():
-                conditions.append(self._get_fake_query_condition(query_type_str, condition))
+        if body:
+            if 'query' in body:
+                query = body['query']
+                for query_type_str, condition in query.items():
+                    conditions.append(self._get_fake_query_condition(query_type_str, condition))
+            if 'sort' in body:
+                out_of_sorts = body['sort']
+                for sortie in out_of_sorts:
+                    for field, sort_condition in sortie.items():
+                        sorts.append((self._get_fake_sort(field, sort_condition)))
+
         for searchable_index in searchable_indexes:
             if self.__documents_dict and self.__documents_dict.get(searchable_index):
                 for document in self.__documents_dict[searchable_index]:
@@ -653,6 +720,11 @@ class FakeElasticsearch():
         for match in matches:
             match['_score'] = 1.0
             hits.append(match)
+
+        # apply sort
+        if hits:
+            for sortie in sorts:
+                hits = sortie.sort(hits)
 
         # build aggregations
         if body is not None and 'aggs' in body:

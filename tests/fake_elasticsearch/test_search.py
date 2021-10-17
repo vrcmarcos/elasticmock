@@ -148,7 +148,7 @@ class TestSearch(TestElasticmock):
                                   body={'query': {'bool': {
                                       'filter': [{'terms': {'id': [1, 2]}}],
                                       'must_not': [{'term': {'id': 1}}],
-                                      }}})
+                                  }}})
         self.assertEqual(response['hits']['total']['value'], 1)
         doc = response['hits']['hits'][0]['_source']
         self.assertEqual(2, doc['id'])
@@ -175,13 +175,12 @@ class TestSearch(TestElasticmock):
             doc = response['hits']['hits'][0]['_source']
             self.assertEqual(i, doc['id'])
 
-
     def test_search_with_bool_query_and_multi_match(self):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={
                 'data': 'test_{0}'.format(i) if i % 2 == 0 else None,
-                'data2': 'test_{0}'.format(i) if (i+1) % 2 == 0 else None
-                })
+                'data2': 'test_{0}'.format(i) if (i + 1) % 2 == 0 else None
+            })
 
         search_body = {
             "query": {
@@ -226,13 +225,13 @@ class TestSearch(TestElasticmock):
         for i in range(0, 10):
             self.es.index(index='index_for_search1', doc_type=DOC_TYPE, body={
                 'data': 'test_{0}'.format(i) if i % 2 == 0 else None,
-                'data2': 'test_{0}'.format(i) if (i+1) % 2 == 0 else None
-                })
+                'data2': 'test_{0}'.format(i) if (i + 1) % 2 == 0 else None
+            })
         for i in range(0, 10):
             self.es.index(index='index_for_search2', doc_type=DOC_TYPE, body={
                 'data': 'test_{0}'.format(i) if i % 2 == 0 else None,
-                'data2': 'test_{0}'.format(i) if (i+1) % 2 == 0 else None
-                })
+                'data2': 'test_{0}'.format(i) if (i + 1) % 2 == 0 else None
+            })
 
         search_body = {
             "query": {
@@ -338,6 +337,50 @@ class TestSearch(TestElasticmock):
         self.assertEqual(len(expected_ids), response['hits']['total']['value'])
         hits = response['hits']['hits']
         self.assertEqual(set(expected_ids), set(hit['_source']['id'] for hit in hits))
+
+    def test_search_with_sort_asc(self):
+        for i in range(0, 12):
+            body = {
+                'id': i,
+                'timestamp': datetime.datetime(2009, 1, 1, 10, 5, 0) - datetime.timedelta(minutes=i),
+                'data': 'data'
+            }
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body=body)
+
+        response = self.es.search(
+            index='index_for_search',
+            doc_type=DOC_TYPE,
+            body={"query": {
+                "term": {"data": "data"}
+            },
+                "sort": [
+                    {"timestamp": {"order": "asc"}}
+                ]},
+        )
+
+        self.assertEqual(11, response['hits']['hits'][0]['_source']['id'])
+
+    def test_search_with_sort_desc(self):
+        for i in range(0, 12):
+            body = {
+                'id': i,
+                'timestamp': datetime.datetime(2009, 1, 1, 10, 5, 0) + datetime.timedelta(minutes=i),
+                'data': 'data'
+            }
+            self.es.index(index='index_for_search', doc_type=DOC_TYPE, body=body)
+
+        response = self.es.search(
+            index='index_for_search',
+            doc_type=DOC_TYPE,
+            body={"query": {
+                "term": {"data": "data"}
+            },
+                "sort": [
+                    {"timestamp": {"order": "desc"}}
+                ]},
+        )
+
+        self.assertEqual(11, response['hits']['hits'][0]['_source']['id'])
 
     def test_bucket_aggregation_terms(self):
         data = [
