@@ -317,10 +317,12 @@ class FakeElasticsearch(Elasticsearch):
 
         if id is None:
             id = get_random_id()
+            result = 'created'
         elif self.exists(index, id, doc_type=doc_type, params=params):
             doc = self.get(index, id, doc_type=doc_type, params=params)
             version = doc['_version'] + 1
             self.delete(index, id, doc_type=doc_type)
+            result = 'updated'
 
         self.__documents_dict[index].append({
             '_type': doc_type,
@@ -335,7 +337,8 @@ class FakeElasticsearch(Elasticsearch):
             '_id': id,
             'created': True,
             '_version': version,
-            '_index': index
+            '_index': index,
+            'result': result
         }
 
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',

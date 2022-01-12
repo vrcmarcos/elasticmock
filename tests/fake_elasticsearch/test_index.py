@@ -17,6 +17,7 @@ class TestIndex(TestElasticmock):
         self.assertTrue(data.get('created'))
         self.assertEqual(1, data.get('_version'))
         self.assertEqual(INDEX_NAME, data.get('_index'))
+        self.assertEqual('created', data.get('result'))
 
     def test_should_index_document_without_doc_type(self):
         data = self.es.index(index=INDEX_NAME, body=BODY)
