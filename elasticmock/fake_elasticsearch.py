@@ -35,6 +35,7 @@ class QueryType:
     SHOULD = 'SHOULD'
     MINIMUM_SHOULD_MATCH = 'MINIMUM_SHOULD_MATCH'
     MULTI_MATCH = 'MULTI_MATCH'
+    MUST_NOT = 'MUST_NOT'
 
     @staticmethod
     def get_query_type(type_str):
@@ -60,6 +61,8 @@ class QueryType:
             return QueryType.MINIMUM_SHOULD_MATCH
         elif type_str == 'multi_match':
             return QueryType.MULTI_MATCH
+        elif type_str == 'must_not':
+            return QueryType.MUST_NOT
         else:
             raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
 
@@ -107,6 +110,8 @@ class FakeQueryCondition:
             return self._evaluate_for_should_query_type(document)
         elif self.type == QueryType.MULTI_MATCH:
             return self._evaluate_for_multi_match_query_type(document)
+        elif self.type == QueryType.MUST_NOT:
+            return self._evaluate_for_must_not_query_type(document)
         else:
             raise NotImplementedError('Fake query evaluation not implemented for query type: %s' % self.type)
 
@@ -210,6 +215,26 @@ class FakeQueryCondition:
                         return False
 
         return return_val
+
+    def _evaluate_for_must_not_query_type(self, document):
+        if isinstance(self.condition, dict):
+            for query_type, sub_query in self.condition.items():
+                return_val = FakeQueryCondition(
+                    QueryType.get_query_type(query_type),
+                    sub_query
+                ).evaluate(document)
+                if return_val:
+                    return False
+        elif isinstance(self.condition, list):
+            for sub_condition in self.condition:
+                for sub_condition_key in sub_condition:
+                    return_val = FakeQueryCondition(
+                        QueryType.get_query_type(sub_condition_key),
+                        sub_condition[sub_condition_key]
+                    ).evaluate(document)
+                    if return_val:
+                        return False
+        return True
 
     def _evaluate_for_should_query_type(self, document):
         return_val = False
