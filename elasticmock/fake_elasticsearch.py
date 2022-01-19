@@ -511,7 +511,8 @@ class FakeElasticsearch(Elasticsearch):
                   'preference', 'realtime', 'refresh', 'routing',
                   'stored_fields')
     def mget(self, body, index, doc_type='_all', params=None, headers=None):
-        ids = body.get('ids')
+        docs = body.get('docs')
+        ids = [doc['_id'] for doc in docs]
         results = []
         for id in ids:
             try:

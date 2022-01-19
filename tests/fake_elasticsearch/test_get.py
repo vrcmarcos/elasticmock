@@ -66,5 +66,5 @@ class TestGet(TestElasticmock):
         for _ in range(0, 10):
             data = self.es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=BODY)
             ids.append(data.get('_id'))
-        results = self.es.mget(index=INDEX_NAME, body={'ids': ids})
+        results = self.es.mget(index=INDEX_NAME, body={'docs': [{'_id': id} for id in ids]})
         self.assertEqual(len(results['docs']), 10)
