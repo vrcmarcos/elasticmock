@@ -769,6 +769,8 @@ class FakeElasticsearch(Elasticsearch):
             hits = hits[params.get('from'):params.get('from') + params.get('size')]
         elif 'size' in params:
             hits = hits[:int(params['size'])]
+        elif body and 'size' in body:
+            hits = hits[:int(body['size'])]
 
         result['hits']['hits'] = hits
 
