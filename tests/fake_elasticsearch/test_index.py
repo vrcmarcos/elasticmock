@@ -57,3 +57,22 @@ class TestIndex(TestElasticmock):
         }
 
         self.assertDictEqual(expected, target_doc)
+
+
+    def test_update_by_query(self):
+        data = self.es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=BODY)
+        document_id = data.get('_id')
+        new_author = 'kimchy2'
+        self.es.update_by_query(index=INDEX_NAME, body={
+            'query': {
+                'match': {'author': 'kimchy'},
+            },
+            'script': {
+                'source': 'ctx._source.author = params.author',
+                'params': {
+                    'author': new_author
+                }
+            }
+        })
+        target_doc = self.es.get(index=INDEX_NAME, id=document_id)
+        self.assertEqual(target_doc['_source']['author'], new_author)
