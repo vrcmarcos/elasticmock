@@ -340,9 +340,10 @@ class FakeElasticsearch(Elasticsearch):
 
         version = 1
 
+        result = 'created'
         if id is None:
             id = get_random_id()
-            result = 'created'
+
         elif self.exists(index, id, doc_type=doc_type, params=params):
             doc = self.get(index, id, doc_type=doc_type, params=params)
             version = doc['_version'] + 1
