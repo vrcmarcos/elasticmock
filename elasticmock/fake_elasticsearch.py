@@ -340,12 +340,15 @@ class FakeElasticsearch(Elasticsearch):
 
         version = 1
 
+        result = 'created'
         if id is None:
             id = get_random_id()
+
         elif self.exists(index, id, doc_type=doc_type, params=params):
             doc = self.get(index, id, doc_type=doc_type, params=params)
             version = doc['_version'] + 1
             self.delete(index, id, doc_type=doc_type)
+            result = 'updated'
 
         self.__documents_dict[index].append({
             '_type': doc_type,
@@ -360,7 +363,8 @@ class FakeElasticsearch(Elasticsearch):
             '_id': id,
             'created': True,
             '_version': version,
-            '_index': index
+            '_index': index,
+            'result': result
         }
 
     @query_params('consistency', 'op_type', 'parent', 'refresh', 'replication',
@@ -504,11 +508,96 @@ class FakeElasticsearch(Elasticsearch):
             }
             raise NotFoundError(404, json.dumps(error_data))
 
+    @query_params(
+        "_source",
+        "_source_excludes",
+        "_source_includes",
+        "allow_no_indices",
+        "analyze_wildcard",
+        "analyzer",
+        "conflicts",
+        "default_operator",
+        "df",
+        "expand_wildcards",
+        "from_",
+        "ignore_unavailable",
+        "lenient",
+        "max_docs",
+        "pipeline",
+        "preference",
+        "q",
+        "refresh",
+        "request_cache",
+        "requests_per_second",
+        "routing",
+        "scroll",
+        "scroll_size",
+        "search_timeout",
+        "search_type",
+        "size",
+        "slices",
+        "sort",
+        "stats",
+        "terminate_after",
+        "timeout",
+        "version",
+        "version_type",
+        "wait_for_active_shards",
+        "wait_for_completion",
+    )
+    def update_by_query(
+        self, index, body=None, doc_type=None, params=None, headers=None
+    ):
+        # Actually it only supports script equal operations
+        # TODO: Full support from painless language
+        total_updated = 0
+        if isinstance(index, list):
+            index, = index
+        new_values = {}
+        script_params = body['script']['params']
+        script_source = body['script']['source'] \
+            .replace('ctx._source.', '') \
+            .split(';')
+        for sentence in script_source:
+            if sentence:
+                field, _, value = sentence.split()
+                if value.startswith('params.'):
+                    _, key = value.split('.')
+                    value = script_params.get(key)
+                new_values[field] = value
+
+        matches = self.search(index=index, doc_type=doc_type, body=body,
+            params=params, headers=headers)
+        if matches['hits']['total']:
+            for hit in matches['hits']['hits']:
+                body = hit['_source']
+                body.update(new_values)
+                self.index(index, body, doc_type=hit['_type'], id=hit['_id'])
+                total_updated += 1
+
+        return {
+            'took': 1,
+            'time_out': False,
+            'total': matches['hits']['total'],
+            'updated': total_updated,
+            'deleted': 0,
+            'batches': 1,
+            'version_conflicts': 0,
+            'noops': 0,
+            'retries': 0,
+            'throttled_millis': 100,
+            'requests_per_second': 100,
+            'throttled_until_millis': 0,
+            'failures': []
+        }
+
+
     @query_params('_source', '_source_exclude', '_source_include',
                   'preference', 'realtime', 'refresh', 'routing',
                   'stored_fields')
     def mget(self, body, index, doc_type='_all', params=None, headers=None):
-        ids = body.get('ids')
+        docs = body.get('docs')
+        ids = [doc['_id'] for doc in docs]
         results = []
         for id in ids:
             try:
@@ -681,6 +770,8 @@ class FakeElasticsearch(Elasticsearch):
             hits = hits[params.get('from'):params.get('from') + params.get('size')]
         elif 'size' in params:
             hits = hits[:int(params['size'])]
+        elif body and 'size' in body:
+            hits = hits[:int(body['size'])]
 
         result['hits']['hits'] = hits
 

@@ -17,6 +17,7 @@ class TestIndex(TestElasticmock):
         self.assertTrue(data.get('created'))
         self.assertEqual(1, data.get('_version'))
         self.assertEqual(INDEX_NAME, data.get('_index'))
+        self.assertEqual('created', data.get('result'))
 
     def test_should_index_document_without_doc_type(self):
         data = self.es.index(index=INDEX_NAME, body=BODY)
@@ -56,3 +57,22 @@ class TestIndex(TestElasticmock):
         }
 
         self.assertDictEqual(expected, target_doc)
+
+
+    def test_update_by_query(self):
+        data = self.es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=BODY)
+        document_id = data.get('_id')
+        new_author = 'kimchy2'
+        self.es.update_by_query(index=INDEX_NAME, body={
+            'query': {
+                'match': {'author': 'kimchy'},
+            },
+            'script': {
+                'source': 'ctx._source.author = params.author',
+                'params': {
+                    'author': new_author
+                }
+            }
+        })
+        target_doc = self.es.get(index=INDEX_NAME, id=document_id)
+        self.assertEqual(target_doc['_source']['author'], new_author)
