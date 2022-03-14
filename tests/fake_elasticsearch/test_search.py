@@ -459,7 +459,6 @@ class TestSearch(TestElasticmock):
             {"key": {"histo": '2021-12-01T15:00:00'}, "doc_count": 2},
         ]
         actual = response["aggregations"]["stats"]["buckets"]
-        print(actual)
         for x, y in zip(expected, actual):
             self.assertDictEqual(x["key"], y["key"])
             self.assertEqual(x["doc_count"], y["doc_count"])
@@ -497,7 +496,6 @@ class TestSearch(TestElasticmock):
             {"key": {"histo": '2021-12-01T15:00:00'}, "doc_count": 2},
         ]
         actual = response["aggregations"]["stats"]["buckets"]
-        print(actual)
         for x, y in zip(expected, actual):
             self.assertDictEqual(x["key"], y["key"])
             self.assertEqual(x["doc_count"], y["doc_count"])
@@ -535,7 +533,6 @@ class TestSearch(TestElasticmock):
             {"key": {"histo": '2021-12-01T15:00:00'}, "doc_count": 2},
         ]
         actual = response["aggregations"]["stats"]["buckets"]
-        print(actual)
         for x, y in zip(expected, actual):
             self.assertDictEqual(x["key"], y["key"])
             self.assertEqual(x["doc_count"], y["doc_count"])
