@@ -243,7 +243,7 @@ class FakeQueryCondition:
                 elif sign == 'lt' and value:
                     if doc_val >= value:
                         return False
-                else:
+                elif sign not in ['gte', 'gt', 'lte', 'lt']:
                     raise ValueError(f"Invalid comparison type {sign}")
             return True
 

@@ -338,6 +338,24 @@ class TestSearch(TestElasticmock):
         hits = response['hits']['hits']
         self.assertEqual(set(expected_ids), set(hit['_source']['id'] for hit in hits))
 
+    def test_search_with_range_query_with_null_lte(self):
+        body = {
+            'id': 5,
+            'timestamp': datetime.datetime(2009, 1, 1, 10, 0, 0),
+            'data_int': 10,
+        }
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body=body)
+
+        response = self.es.search(
+            index='index_for_search',
+            doc_type=DOC_TYPE,
+            body={'query': {'range': {'data_int': {"gte": 10, "lte": None}}}},
+        )
+
+        self.assertEqual(1, response['hits']['total']['value'])
+        hits = response['hits']['hits']
+        self.assertEqual({5}, set(hit['_source']['id'] for hit in hits))
+
     def test_search_with_sort_asc(self):
         for i in range(0, 12):
             body = {
