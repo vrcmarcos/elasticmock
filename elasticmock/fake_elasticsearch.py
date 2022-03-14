@@ -229,7 +229,7 @@ class FakeQueryCondition:
                 return False
 
             for sign, value in comparisons.items():
-                if isinstance(doc_val, datetime.datetime):
+                if isinstance(doc_val, datetime.datetime) and not isinstance(value, datetime.datetime):
                     value = dateutil.parser.isoparse(value)
                 if sign == 'gte':
                     if doc_val < value:
