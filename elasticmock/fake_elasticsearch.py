@@ -237,11 +237,11 @@ class FakeQueryCondition:
                 elif sign == 'gt':
                     if doc_val <= value:
                         return False
-                elif sign == 'lte':
-                    if not value or doc_val > value:
+                elif sign == 'lte' and value:
+                    if doc_val > value:
                         return False
-                elif sign == 'lt':
-                    if not value or doc_val >= value:
+                elif sign == 'lt' and value:
+                    if doc_val >= value:
                         return False
                 else:
                     raise ValueError(f"Invalid comparison type {sign}")
