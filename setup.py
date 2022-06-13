@@ -21,7 +21,7 @@ setuptools.setup(
     url='https://github.com/vrcmarcos/elasticmock',
     packages=setuptools.find_packages(exclude=('tests')),
     install_requires=[
-        'elasticsearch',
+        'elasticsearch<8.0.0',
         'python-dateutil',
     ],
     classifiers=[
