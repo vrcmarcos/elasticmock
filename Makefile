@@ -1,4 +1,4 @@
-ELASTICMOCK_VERSION='1.8.9'
+ELASTICMOCK_VERSION='1.9.0'
 
 install:
 	pip3 install -r requirements.txt

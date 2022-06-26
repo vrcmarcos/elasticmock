@@ -96,6 +96,22 @@ class TestSearch(TestElasticmock):
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]['_source'], {'data': 'test_3'})
 
+    def test_search_with_wildcard_query(self):
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221010'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221011'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221012'})
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'wildcard': {'data': {'value': 'test_1*'}}}})
+        self.assertEqual(response['hits']['total']['value'], 0)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 0)
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'wildcard': {'data': {'value': 'test_*'}}}})
+        self.assertEqual(response['hits']['total']['value'], 3)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 3)
+
     def test_search_with_match_query_in_int_list(self):
         for i in range(0, 10):
             self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': [i, 11, 13]})
