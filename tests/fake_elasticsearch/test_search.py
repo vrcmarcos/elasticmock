@@ -112,6 +112,22 @@ class TestSearch(TestElasticmock):
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 3)
 
+    def test_search_with_wildcard_query_shorthand(self):
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221010'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221011'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221012'})
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'wildcard': {'data': 'test_1*'}}})
+        self.assertEqual(response['hits']['total']['value'], 0)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 0)
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'wildcard': {'data':'test_*'}}})
+        self.assertEqual(response['hits']['total']['value'], 3)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 3)
+
     def test_search_with_prefix_query(self):
         self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221010'})
         self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221011'})
@@ -124,6 +140,22 @@ class TestSearch(TestElasticmock):
 
         response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
                                   body={'query': {'prefix': {'data': {'value': 'test_2'}}}})
+        self.assertEqual(response['hits']['total']['value'], 3)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 3)
+
+    def test_search_with_prefix_query_shorthand(self):
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221010'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221011'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'data': 'test_20221012'})
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'prefix': {'data': 'test_1'}}})
+        self.assertEqual(response['hits']['total']['value'], 0)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 0)
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={'query': {'prefix': {'data': 'test_2'}}})
         self.assertEqual(response['hits']['total']['value'], 3)
         hits = response['hits']['hits']
         self.assertEqual(len(hits), 3)

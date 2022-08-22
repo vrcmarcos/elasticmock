@@ -336,7 +336,7 @@ class FakeQueryCondition:
         return self._evaluate_for_fields(document)
 
     def _compare_value_for_field(self, doc_source, field, value, ignore_case, is_wildcard=False, is_prefix=False):
-        if is_wildcard or is_prefix:
+        if (is_wildcard or is_prefix) and type(value) == type({}):
             value = value['value']
         if ignore_case and isinstance(value, str):
             value = value.lower()
