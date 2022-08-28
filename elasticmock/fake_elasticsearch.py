@@ -36,6 +36,7 @@ class QueryType:
     MULTI_MATCH = 'MULTI_MATCH'
     MUST_NOT = 'MUST_NOT'
     WILDCARD = 'WILDCARD'
+    PREFIX = 'PREFIX'
 
     @staticmethod
     def get_query_type(type_str):
@@ -65,6 +66,8 @@ class QueryType:
             return QueryType.MUST_NOT
         elif type_str == 'wildcard':
             return QueryType.WILDCARD
+        elif type_str == 'prefix':
+            return QueryType.PREFIX
         else:
             raise NotImplementedError(f'type {type_str} is not implemented for QueryType')
 
@@ -157,6 +160,8 @@ class FakeQueryCondition:
             return self._evaluate_for_terms_query_type(document)
         elif self.type == QueryType.WILDCARD:
             return self._evaluate_for_wildcard_query_type(document)
+        elif self.type == QueryType.PREFIX:
+            return self._evaluate_for_prefix_query_type(document)
         elif self.type == QueryType.RANGE:
             return self._evaluate_for_range_query_type(document)
         elif self.type == QueryType.BOOL:
@@ -191,12 +196,21 @@ class FakeQueryCondition:
         return_val = False
         if isinstance(self.condition, dict):
             for _, sub_query in self.condition.items():
-                return_val = self._evaluate_for_field(document, True, True)
+                return_val = self._evaluate_for_field(document, True, is_wildcard=True)
                 if not return_val:
                     return False
         return return_val
 
-    def _evaluate_for_field(self, document, ignore_case=True, is_wildcard=False):
+    def _evaluate_for_prefix_query_type(self, document):
+        return_val = False
+        if isinstance(self.condition, dict):
+            for _, sub_query in self.condition.items():
+                return_val = self._evaluate_for_field(document, ignore_case=False, is_prefix=True)
+                if not return_val:
+                    return False
+        return return_val
+
+    def _evaluate_for_field(self, document, ignore_case=True, is_wildcard=False, is_prefix=False):
         doc_source = document['_source']
         return_val = False
         for field, value in self.condition.items():
@@ -205,7 +219,8 @@ class FakeQueryCondition:
                 field,
                 value,
                 ignore_case,
-                is_wildcard
+                is_wildcard=is_wildcard,
+                is_prefix=is_prefix
             )
             if return_val:
                 break
@@ -320,8 +335,8 @@ class FakeQueryCondition:
     def _evaluate_for_multi_match_query_type(self, document):
         return self._evaluate_for_fields(document)
 
-    def _compare_value_for_field(self, doc_source, field, value, ignore_case, is_wildcard=False):
-        if is_wildcard:
+    def _compare_value_for_field(self, doc_source, field, value, ignore_case, is_wildcard=False, is_prefix=False):
+        if (is_wildcard or is_prefix) and type(value) == type({}):
             value = value['value']
         if ignore_case and isinstance(value, str):
             value = value.lower()
@@ -350,6 +365,8 @@ class FakeQueryCondition:
                     val = val.lower()
             if is_wildcard:
                 return re.search(value.replace('*', '.*'), val)
+            if is_prefix:
+                return val.startswith(value)
             if value == val:
                 return True
             if isinstance(val, str) and str(value) in val:
