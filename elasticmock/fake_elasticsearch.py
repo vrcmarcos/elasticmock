@@ -142,9 +142,10 @@ class FakeQueryCondition:
     type = None
     condition = None
 
-    def __init__(self, type, condition):
+    def __init__(self, type, condition, parent_condition=None):
         self.type = type
         self.condition = condition
+        self.parent_condition = parent_condition
 
     def evaluate(self, document):
         return self._evaluate_for_query_type(document)
@@ -176,6 +177,9 @@ class FakeQueryCondition:
             return self._evaluate_for_multi_match_query_type(document)
         elif self.type == QueryType.MUST_NOT:
             return self._evaluate_for_must_not_query_type(document)
+        elif self.type == QueryType.MINIMUM_SHOULD_MATCH:
+            # Deal with minimum_should_match as part of the should query
+            return True
         else:
             raise NotImplementedError('Fake query evaluation not implemented for query type: %s' % self.type)
 
@@ -284,7 +288,8 @@ class FakeQueryCondition:
             for query_type, sub_query in self.condition.items():
                 return_val = FakeQueryCondition(
                     QueryType.get_query_type(query_type),
-                    sub_query
+                    sub_query,
+                    self.condition
                 ).evaluate(document)
                 if not return_val:
                     return False
@@ -320,8 +325,14 @@ class FakeQueryCondition:
                         return False
         return True
 
+    def _get_minimum_should_match(self):
+        return self.parent_condition.get("minimum_should_match", 1) \
+            if self.parent_condition \
+            else 1
+
     def _evaluate_for_should_query_type(self, document):
-        return_val = False
+        minimum_should_match = self._get_minimum_should_match()
+        match_count = 0
         for sub_condition in self.condition:
             for sub_condition_key in sub_condition:
                 return_val = FakeQueryCondition(
@@ -329,8 +340,10 @@ class FakeQueryCondition:
                     sub_condition[sub_condition_key]
                 ).evaluate(document)
                 if return_val:
-                    return True
-        return return_val
+                    match_count += 1
+                    if match_count >= minimum_should_match:
+                        return True
+        return False
 
     def _evaluate_for_multi_match_query_type(self, document):
         return self._evaluate_for_fields(document)

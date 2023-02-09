@@ -285,6 +285,31 @@ class TestSearch(TestElasticmock):
         self.assertEqual(len(hits), 3)
         self.assertEqual(hits[0]['_source'], {'data': 'test_0'})
 
+    def test_search_bool_minimum_should_match_query(self):
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'field1': 'test_0', 'field2': 'test_0'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'field1': 'test_1', 'field2': 'test_0'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'field1': 'test_0', 'field2': 'test_1'})
+        self.es.index(index='index_for_search', doc_type=DOC_TYPE, body={'field1': 'test_1', 'field2': 'test_1'})
+
+        response = self.es.search(index='index_for_search', doc_type=DOC_TYPE,
+                                  body={
+                                      'query': {
+                                          'bool': {
+                                              'should': [
+                                                  {'match': {'field1': 'test_1'}},
+                                                  {'match': {'field2': 'test_1'}},
+                                              ],
+                                              'minimum_should_match': 1
+                                          }
+                                      }
+                                  })
+        self.assertEqual(response['hits']['total']['value'], 3)
+        hits = response['hits']['hits']
+        self.assertEqual(len(hits), 3)
+        self.assertEqual(hits[0]['_source'], {'field1': 'test_1', 'field2': 'test_0'})
+        self.assertEqual(hits[1]['_source'], {'field1': 'test_0', 'field2': 'test_1'})
+        self.assertEqual(hits[2]['_source'], {'field1': 'test_1', 'field2': 'test_1'})
+
     def test_msearch(self):
         for i in range(0, 10):
             self.es.index(index='index_for_search1', doc_type=DOC_TYPE, body={
