@@ -298,7 +298,8 @@ class FakeQueryCondition:
                 for sub_condition_key in sub_condition:
                     return_val = FakeQueryCondition(
                         QueryType.get_query_type(sub_condition_key),
-                        sub_condition[sub_condition_key]
+                        sub_condition[sub_condition_key],
+                        self.condition
                     ).evaluate(document)
                     if not return_val:
                         return False
