@@ -7,7 +7,7 @@ from elasticsearch.client.utils import query_params
 class FakeIndicesClient(IndicesClient):
 
     @query_params('master_timeout', 'timeout')
-    def create(self, index, body=None, params=None, headers=None):
+    def create(self, index, body=None, params=None, headers=None, *args, **kwargs):
         documents_dict = self.__get_documents_dict()
         if index not in documents_dict:
             documents_dict[index] = []
